@@ -25,13 +25,18 @@ def setup_logger():
     settings.logger.addHandler(handler)
 
 
-def import_config():
+def read_config_file():
     with open(settings.config_file, 'r') as cfg_file:
-        config = json.loads(cfg_file.read())
-        for k, v in config.items():
-            if hasattr(settings, k):
-                continue
-            setattr(settings, k, v)
+        return json.loads(cfg_file.read())
+
+def import_config():
+    options, args = get_args.parser()
+    options_keys = vars(options)
+    config = read_config_file()
+    for k, v in config.items():
+        if k in options_keys:
+            continue
+        setattr(settings, k, v)
 
 
 def import_options():
