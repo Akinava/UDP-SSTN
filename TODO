@@ -1,0 +1,17 @@
+UDP-SSTN
+Swarm Server Traversal for NAT - Server
+
+# rebuild and run project in local containers
+docker-compose -f ./docker/compose-test/docker-compose.yml up --build
+
+# start container interactive
+docker start -i test_udp_sstn
+
+# build image
+docker build -f docker/images/server/Dockerfile -t udp_sstn:v0 .
+
+# build and run container
+docker run -it udp_sstn:v0
+
+# run server local
+python3 src/server.py -c ../docker/config.json -s docker/shadow

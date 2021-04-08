@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  server:
+    container_name: test_udp_sstn
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: udp_sstn:v0
+    ports:
+      - 2003:2003
+    tty: true
