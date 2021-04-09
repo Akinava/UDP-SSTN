@@ -16,6 +16,9 @@ from utilit import pack_host, pack_port, binary_not
 
 
 class ServerHandler(protocol.GeneralProtocol):
+    disconnect_flag = b'\xff'
+    keep_connection_flag = b'\x00'
+
     protocol = {
         'request': 'response',
         'swarm_ping': None,
@@ -50,14 +53,6 @@ class ServerHandler(protocol.GeneralProtocol):
         group = self.get_connection_group(connection)
         del group[connection]
         connection.shutdown()
-
-    def get_swarm_list_response(self):
-        swarm_list_response = b''
-        for connection in self.swarm_list:
-            swarm_list_response += connection.get_fingerprint()
-            swarm_list_response += pack_host(connection.get_remote_host())
-            swarm_list_response += pack_port(connection.get_remote_port())
-        return swarm_list_response
 
     def set_connection_fingerprint(self, connection):
         fingerprint_beginning = self.crypt_tools.get_fingerprint_len()

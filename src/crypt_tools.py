@@ -10,16 +10,17 @@ import os
 import json
 from cryptotool import *
 import settings
+from utilit import Singleton
 from settings import logger
 
 
-class Tools:
+class Tools(Singleton):
     def __init__(self):
-        logger.info('')
+        logger.debug('')
         self.init_ecdsa()
 
     def init_ecdsa(self):
-        logger.info('')
+        logger.debug('')
         if self.get_ecdsa_from_file():
             return
         self.generate_new_ecdsa()
@@ -36,12 +37,12 @@ class Tools:
                 return None
 
     def save_shadow_file(self, data):
-        logger.info('')
+        logger.debug('')
         with open(settings.shadow_file, 'w') as shadow_file:
             shadow_file.write(json.dumps(data, indent=2))
 
     def update_shadow_file(self, new_data):
-        logger.info('')
+        logger.debug('')
         file_data = {} or self.read_shadow_file()
         if file_data is None:
             file_data = {}
@@ -49,7 +50,7 @@ class Tools:
         self.save_shadow_file(file_data)
 
     def get_ecdsa_from_file(self):
-        logger.info('')
+        logger.debug('')
         shadow_data = self.read_shadow_file()
         if shadow_data is None:
             return False
@@ -61,11 +62,11 @@ class Tools:
         return True
 
     def generate_new_ecdsa(self):
-        logger.info('')
+        logger.debug('')
         self.ecdsa = ECDSA()
 
     def save_ecdsa(self):
-        logger.info('')
+        logger.debug('')
         ecdsa_priv_key = self.ecdsa.get_priv_key()
         ecdsa_priv_key_b58 = B58().pack(ecdsa_priv_key)
         fingerprint_b58 = B58().pack(self.get_fingerprint())
@@ -76,7 +77,7 @@ class Tools:
         )
 
     def get_fingerprint(self):
-        logger.info('')
+        logger.debug('')
         if not hasattr(self, 'fingerprint'):
             self.make_fingerprint()
         return self.fingerprint
@@ -89,8 +90,4 @@ class Tools:
         self.fingerprint = sha256(open_key)
 
     def sign_message(self, message):
-        print('Tools, sign_message: message|sign|pub_key', len(message), len(self.ecdsa.sign(message)), len(self.ecdsa.get_pub_key()))
         return message + self.ecdsa.sign(message) + self.ecdsa.get_pub_key()
-
-
-cryptography = Tools()

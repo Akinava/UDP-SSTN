@@ -16,7 +16,7 @@ import utilit
 
 class UDPHost:
     def __init__(self, handler):
-        logger.info('')
+        logger.debug('')
         self.handler = handler
         self.connections = []
         self.listener = None
@@ -50,30 +50,8 @@ class UDPHost:
             transport=transport,
             protocol=protocol)
 
-    async def send(self, connection, message, local_port=None):
-        logger.info('')
-
-        loop = asyncio.get_running_loop()
-        on_con_lost = loop.create_future()
-        local_addr = (self.local_host, local_port) if local_port else None
-
-        transport, protocol = await loop.create_datagram_endpoint(
-            lambda: self.handler(message, on_con_lost),
-            remote_addr=connection.get_remote_addr(),
-            local_addr=local_addr)
-
-        connection.set_transport(transport)
-        connection.set_protocol(protocol)
-        connettion.set_net(self.connections)
-        self.connections.append(connection)
-
-        try:
-            await on_con_lost
-        finally:
-            connection.close_transport()
-
     async def serve_forever(self):
-        logger.info('')
+        logger.debug('')
         while self.listener.is_alive():
             self.ping_connections()
             await asyncio.sleep(settings.peer_ping_time_seconds)
@@ -81,7 +59,7 @@ class UDPHost:
     def ping_connections(self):
         for connection in self.connections:
             if not connection.is_time_out():
-                self.send(connection, self.handler.do_swarm_ping())
+                connection.send(self.handler.do_swarm_ping())
             else:
                 connection.shutdown()
 
@@ -90,7 +68,7 @@ class UDPHost:
             connection.shutdown()
 
     def config_reload(self):
-        logger.info('')
+        logger.debug('')
         utilit.import_config()
 
     def exit(self):
@@ -99,4 +77,4 @@ class UDPHost:
         self.shutdown_connections()
 
     def __del__(self):
-        logger.info('')
+        logger.debug('')

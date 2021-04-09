@@ -13,43 +13,39 @@ from connection import Connection
 
 
 class GeneralProtocol:
-    disconnect_flag = b'\xff'
-    keep_connection_flag = b'\x00'
-
     def __init__(self, message=None, on_con_lost=None):
-        logger.info('')
-        self.crypt_tools = crypt_tools.cryptography
+        logger.debug('')
+        self.crypt_tools = crypt_tools.Tools()
         self.response = message
         self.on_con_lost = on_con_lost
         self.transport = None
 
     def connection_made(self, transport):
-        logger.info('')
+        logger.debug('')
         self.transport = transport
         self.send_message()
 
     def send_message(self, addr=None):
         if not self.response is None:
-            logger.info('')
+            logger.debug('')
             self.transport.sendto(self.response, addr)
 
     def datagram_received(self, request, addr):
-        print('request %s from %s' % (request, addr))
+        logger.info('request %s from %s' % (request, addr))
         connection = Connection()
         connection.datagram_received(request, addr, self.transport)
-        logger.info('')
         self.response = self.handle(connection)
         self.send_message(addr)
         if not self.response is None:
             print('response "%s"' % (self.response))
 
     def connection_lost(self, addr):
-        logger.info('')
+        logger.debug('')
         # TODO remove this connections
         pass
 
     def handle(self, connection):
-        logger.info('')
+        logger.debug('')
         # TODO make a tread
         request_name = self.define_request(connection)
         logger.info('GeneralProtocol function defined as {}'.format(request_name))
@@ -61,7 +57,7 @@ class GeneralProtocol:
         return response_function(connection)
 
     def define_request(self, connection):
-        logger.info('')
+        logger.debug('')
         self_functions = dir(self)
         for function_name in self_functions:
             if function_name == sys._getframe().f_code.co_name:

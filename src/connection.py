@@ -8,6 +8,7 @@ __version__ = [0, 0]
 
 import struct
 from time import time
+from utilit import Singleton
 import settings
 from settings import logger
 
@@ -113,3 +114,8 @@ class Connection:
         logger.info('')
         print(response, (self.remote_host, self.remote_port))
         self.transport.sendto(response, (self.remote_host, self.remote_port))
+
+
+class NetPool(Singleton):
+    def __init__(self):
+        self.group_0, self.group_1 = {}, {}

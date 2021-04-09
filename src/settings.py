@@ -11,7 +11,7 @@ import utilit
 
 
 config_file = 'config.json'
-logging_level = logging.INFO
+logging_level = logging.DEBUG
 logging_format = '%(asctime)s : %(levelname)s: %(threadName)s : %(module)s  : %(funcName)s : %(message)s'
 
 # host settings

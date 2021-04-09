@@ -7,13 +7,19 @@ __version__ = [0, 0]
 
 
 import json
-import os
 import sys
 import random
 import struct
 import logging
 import settings
 import get_args
+
+
+class Singleton(object):
+    def __new__(cls):
+        if not hasattr(cls, '_instance'):
+            cls._instance = super(Singleton, cls).__new__(cls)
+        return cls._instance
 
 
 def setup_logger():
