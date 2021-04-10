@@ -9,12 +9,13 @@ __version__ = [0, 0]
 import sys
 from settings import logger
 import crypt_tools
-from connection import Connection
+from connection import Connection, NetPool
 
 
 class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
+        self.connections = NetPool()
         self.crypt_tools = crypt_tools.Tools()
         self.response = message
         self.on_con_lost = on_con_lost
@@ -23,26 +24,17 @@ class GeneralProtocol:
     def connection_made(self, transport):
         logger.debug('')
         self.transport = transport
-        self.send_message()
 
-    def send_message(self, addr=None):
-        if not self.response is None:
-            logger.debug('')
-            self.transport.sendto(self.response, addr)
-
-    def datagram_received(self, request, addr):
-        logger.info('request %s from %s' % (request, addr))
+    def datagram_received(self, request, remote_addr):
+        logger.info('request %s from %s' % (request, remote_addr))
         connection = Connection()
-        connection.datagram_received(request, addr, self.transport)
-        self.response = self.handle(connection)
-        self.send_message(addr)
-        if not self.response is None:
-            print('response "%s"' % (self.response))
+        connection.datagram_received(request, remote_addr, self.transport)
+        self.handle(connection)
 
-    def connection_lost(self, addr):
-        logger.debug('')
-        # TODO remove this connections
-        pass
+    def connection_lost(self, remote_addr):
+        connection = Connection()
+        connection.set_remote_addr(remote_addr)
+        connection.shutdown()
 
     def handle(self, connection):
         logger.debug('')

@@ -25,9 +25,6 @@ class ServerHandler(protocol.GeneralProtocol):
         'swarm_peer_request': 'swarm_peer_response',
     }
 
-    connections_group_0 = {}
-    connections_group_1 = {}
-
     def do_swarm_peer_response(self, connection):
         logger.info('')
         self.set_connection_fingerprint(connection)
@@ -89,7 +86,7 @@ class ServerHandler(protocol.GeneralProtocol):
 
     def make_connection_message(self, connection0, connection1):
         disconnect_flag = self.get_disconnect_flag(connection0)
-        message = connection0.set_fingerprint() + connection1.get_request() + connection1.dump_addr() + disconnect_flag
+        message = connection0.get_fingerprint() + connection1.get_request() + connection1.dump_addr() + disconnect_flag
         return self.sign_message(message)
 
     def get_connection_param(self, connection):

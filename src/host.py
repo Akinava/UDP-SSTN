@@ -10,7 +10,7 @@ import asyncio
 import signal
 import settings
 from settings import logger
-from connection import Connection
+from connection import Connection, NetPool
 import utilit
 
 
@@ -18,7 +18,7 @@ class UDPHost:
     def __init__(self, handler):
         logger.debug('')
         self.handler = handler
-        self.connections = []
+        self.connections = NetPool()
         self.listener = None
         self.local_host = settings.local_host
         self.set_posix_handler()
@@ -33,11 +33,7 @@ class UDPHost:
         if signum == signal.SIGUSR1:
             self.config_reload()
 
-    def connect(self, host, port):
-        logger.info('host connect to {} {}'.format(host, port))
-
     async def create_listener(self, port):
-        logger.info('')
         loop = asyncio.get_running_loop()
         logger.info('host create_listener on port {}'.format(port))
 
@@ -57,15 +53,11 @@ class UDPHost:
             await asyncio.sleep(settings.peer_ping_time_seconds)
 
     def ping_connections(self):
-        for connection in self.connections:
-            if not connection.is_time_out():
-                connection.send(self.handler.do_swarm_ping())
-            else:
-                connection.shutdown()
+        for connection in self.connections.get_all():
+            connection.send(self.handler.do_swarm_ping())
 
     def shutdown_connections(self):
-        for connection in self.connections:
-            connection.shutdown()
+        self.connections.clean()
 
     def config_reload(self):
         logger.debug('')
@@ -73,7 +65,7 @@ class UDPHost:
 
     def exit(self):
         logger.info('')
-        self.listener.close_transport()
+        self.listener.shutdown()
         self.shutdown_connections()
 
     def __del__(self):

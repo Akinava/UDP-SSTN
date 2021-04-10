@@ -17,8 +17,12 @@ class Connection:
     def __init__(self):
         self.set_last_response()
 
-    def set_last_response(self):
-        self.last_response = time()
+    def __eq__(self, connection):
+        if self.remote_host != connection.remote_host:
+            return False
+        if self.remote_port != connection.remote_port:
+            return False
+        return True
 
     def loads(self, connection_data):
         for key, val in connection_data.items():
@@ -35,11 +39,8 @@ class Connection:
     def is_time_out(self):
         return time() - self.last_response > settings.peer_timeout_seconds
 
-    def set_net(self, net):
-        self.net = net
-
-    def shutdown(self):
-        self.net.remove(self)
+    def set_last_response(self):
+        self.last_response = time()
 
     def set_transport(self, transport):
         self.transport = transport
@@ -53,27 +54,6 @@ class Connection:
     def get_remote_addr(self):
         return self.remote_host, self.remote_port
 
-    def dump_addr(self):
-        return struct.pack('>BBBBH', *(map(int, self.remote_host.split('.'))), self.remote_port)
-
-    def load_addr(self, data):
-        port = struct.unpack('>H', data[4:6])
-        ip_map = struct.unpack('>BBBB', data[0:4])
-        ip = '.'.join(map, ip_map)
-        return ip, port
-
-    def __eq__(self, connection):
-        if self.remote_host != connection.remote_host:
-            return False
-        if self.remote_port != connection.remote_port:
-            return False
-        return True
-
-    def set_listener(self, local_port, transport, protocol):
-        self.set_protocol(protocol)
-        self.set_transport(transport)
-        self.set_local_port(local_port)
-
     def set_remote_host(self, remote_host):
         self.remote_host = remote_host
 
@@ -83,39 +63,73 @@ class Connection:
     def set_remote_port(self, remote_port):
         self.remote_port = remote_port
 
-    def get_remote_port(self):
-        return self.remote_port
-
     def set_request(self, request):
         self.request = request
 
     def get_request(self):
         return self.request
 
+    def set_fingerprint(self, fingerprint):
+        self.fingerprint = fingerprint
+
     def get_fingerprint(self):
         return self.fingerprint
 
-    def set_remote_addr(self, addr):
-        self.set_remote_host(addr[0])
-        self.set_remote_port(addr[1])
+    def dump_addr(self):
+        return struct.pack('>BBBBH', *(map(int, self.remote_host.split('.'))), self.remote_port)
 
-    def close_transport(self):
-        self.transport.close()
+    def load_addr(self, data):
+        port = struct.unpack('>H', data[4:6])
+        ip_map = struct.unpack('>BBBB', data[0:4])
+        ip = '.'.join(map, ip_map)
+        return ip, port
+
+    def set_listener(self, local_port, transport, protocol):
+        self.set_protocol(protocol)
+        self.set_transport(transport)
+        self.set_local_port(local_port)
 
     def datagram_received(self, request, remote_addr, transport):
         self.set_remote_addr(remote_addr)
         self.set_request(request)
         self.set_transport(transport)
 
-    def set_fingerprint(self, fingerprint):
-        self.fingerprint = fingerprint
+    def set_remote_addr(self, addr):
+        self.set_remote_host(addr[0])
+        self.set_remote_port(addr[1])
 
     def send(self, response):
         logger.info('')
-        print(response, (self.remote_host, self.remote_port))
         self.transport.sendto(response, (self.remote_host, self.remote_port))
+
+    def shutdown(self):
+        self.transport.close()
 
 
 class NetPool(Singleton):
     def __init__(self):
+        self.group_0, self.group_1 = {}, {}
+
+    def __clean_groups(self, group):
+        group_alive = []
+        for connection in group:
+            if connection.is_time_out():
+                connection.shutdown()
+                continue
+            group_alive.append(connection)
+        return group_alive
+
+    def __join_groups(self):
+        group = {}
+        group.update(self.group_0)
+        group.update(self.group_1)
+        return group
+
+    def get_all(self):
+        group_all = self.__join_groups()
+        return self.__clean_groups(group_all)
+
+    def clean(self):
+        for connection, _ in self.__join_groups():
+            connection.shutdown()
         self.group_0, self.group_1 = {}, {}
