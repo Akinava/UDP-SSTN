@@ -15,7 +15,7 @@ from connection import Connection, NetPool
 class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
-        self.connections = NetPool()
+        self.net_pool = NetPool()
         self.crypt_tools = crypt_tools.Tools()
         self.response = message
         self.on_con_lost = on_con_lost
@@ -76,11 +76,6 @@ class GeneralProtocol:
         if connection.get_request() == '':
             return True
         return False
-
-    def define_swarm_peer_request(self, connection):
-        check_request_len = self.crypt_tools.get_fingerprint_len() * 2 == len(connection.get_request())
-        check_fingerprint = connection.get_request()[: self.crypt_tools.get_fingerprint_len()] == self.crypt_tools.get_fingerprint()
-        return check_request_len and check_fingerprint
 
     def do_swarm_ping(self):
         return ''

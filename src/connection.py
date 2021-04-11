@@ -8,7 +8,7 @@ __version__ = [0, 0]
 
 import struct
 from time import time
-from utilit import Singleton
+from utilit import Singleton, binary_not
 import settings
 from settings import logger
 
@@ -125,7 +125,34 @@ class NetPool(Singleton):
         group.update(self.group_1)
         return group
 
-    def get_all(self):
+    def __get_connection_param(self, connection):
+        return self.group_0.get(connection) or self.group_1.get(connection)
+
+    def __find_waiting_connection(self, connections):
+        for connection, params in connections.items():
+            if params.get('state') == 'waiting':
+                return connection
+        return None
+
+    def find_neighbour(self, connection):
+        param = self.__get_connection_param(connection)
+        connection_groups_index = param.get('groups', set())
+        if len(connection_groups_index) != 1:
+            connections = self.get_all_connections()
+        else:
+            connections = self.get_group_by_index(binary_not(next(iter(connection_groups_index))))
+        neighbour_connection = self.__find_waiting_connection(connections)
+        return neighbour_connection
+
+    def save_connection(self, connection):
+        if connection in self.group_0 or connection in self.group_1:
+            return
+        if len(self.group_0) > len(self.group_1):
+            self.group_1[connection] = {}
+            return
+        self.group_0[connection] = {}
+
+    def get_all_connections(self):
         group_all = self.__join_groups()
         return self.__clean_groups(group_all)
 

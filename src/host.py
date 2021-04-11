@@ -18,7 +18,7 @@ class UDPHost:
     def __init__(self, handler):
         logger.debug('')
         self.handler = handler
-        self.connections = NetPool()
+        self.net_pool = NetPool()
         self.listener = None
         self.local_host = settings.local_host
         self.set_posix_handler()
@@ -53,11 +53,11 @@ class UDPHost:
             await asyncio.sleep(settings.peer_ping_time_seconds)
 
     def ping_connections(self):
-        for connection in self.connections.get_all():
+        for connection in self.net_pool.get_all_connections():
             connection.send(self.handler.do_swarm_ping())
 
     def shutdown_connections(self):
-        self.connections.clean()
+        self.net_pool.clean()
 
     def config_reload(self):
         logger.debug('')

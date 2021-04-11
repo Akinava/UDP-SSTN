@@ -12,7 +12,7 @@ import settings
 from settings import logger
 import host
 import protocol
-from utilit import pack_host, pack_port, binary_not
+from utilit import unpack_stream
 
 
 class ServerHandler(protocol.GeneralProtocol):
@@ -25,11 +25,22 @@ class ServerHandler(protocol.GeneralProtocol):
         'swarm_peer_request': 'swarm_peer_response',
     }
 
+    def define_swarm_peer_request(self, connection):
+        check_request_len = self.crypt_tools.get_fingerprint_len() * 2 == len(connection.get_request())
+        my_fingerprint = self.parse_swarm_peer_request(connection)['my_fingerprint']
+        check_fingerprint = my_fingerprint == self.crypt_tools.get_fingerprint()
+        return check_request_len and check_fingerprint
+
+    def parse_swarm_peer_request(self, connection):
+        request = connection.get_request()
+        my_fingerprint, client_fingerprint = binary_not(request, self.crypt_tools.get_fingerprint_len())
+        return {'my_fingerprint': my_fingerprint, 'client_fingerprint': client_fingerprint}
+
     def do_swarm_peer_response(self, connection):
         logger.info('')
-        self.set_connection_fingerprint(connection)
-        self.save_client_in_group_list(connection)
-        neighbour_connection = self.find_neighbour(connection)
+        self.set_fingerprint_to_connection_from_swarm_peer_request(connection)
+        self.net_pool.save_connection(connection)
+        neighbour_connection = self.net_pool.find_neighbour(connection)
         if neighbour_connection:
             self.send_swarm_response(connection, neighbour_connection)
             self.handle_disconnect([connection, neighbour_connection])
@@ -51,18 +62,9 @@ class ServerHandler(protocol.GeneralProtocol):
         del group[connection]
         connection.shutdown()
 
-    def set_connection_fingerprint(self, connection):
-        fingerprint_beginning = self.crypt_tools.get_fingerprint_len()
-        fingerprint_end = self.crypt_tools.get_fingerprint_len() * 2
-        connection.set_fingerprint(connection.get_request()[fingerprint_beginning: fingerprint_end])
-
-    def save_client_in_group_list(self, connection):
-        if connection in self.connections_group_0 or connection in self.connections_group_1:
-            return
-        if len(self.connections_group_0) > len(self.connections_group_1):
-            self.connections_group_1[connection] = {}
-            return
-        self.connections_group_0[connection] = {}
+    def set_fingerprint_to_connection_from_swarm_peer_request(self, connection):
+        client_fingerprint = self.parse_swarm_peer_request(connection)['client_fingerprint']
+        connection.set_fingerprint(client_fingerprint)
 
     def send_swarm_response(self, connection, neighbour_connection):
         sign_message = self.make_connection_message(connection, neighbour_connection)
@@ -89,9 +91,6 @@ class ServerHandler(protocol.GeneralProtocol):
         message = connection0.get_fingerprint() + connection1.get_request() + connection1.dump_addr() + disconnect_flag
         return self.sign_message(message)
 
-    def get_connection_param(self, connection):
-        return self.connections_group_0.get(connection) or self.connections_group_1.get(connection)
-
     def save_connection_param(self, connection, state, neighbour_connection=None):
         if connection in None:
             return
@@ -103,31 +102,6 @@ class ServerHandler(protocol.GeneralProtocol):
         connection_groups = param.get('groups', set())
         connection_groups.add(group)
         param['groups'] = connection_groups
-
-    def find_neighbour(self, connection):
-        param = self.get_connection_param(connection)
-        connection_groups_index = param.get('groups', set())
-        if len(connection_groups_index) != 1:
-            connections_group = self.get_any_group()
-        else:
-            connections_group = self.get_group_by_index(binary_not(next(iter(connection_groups_index))))
-        neighbour_connection= self.find_waiting_connection(connections_group)
-        return neighbour_connection
-
-    def get_group_by_index(self, index):
-        return getattr(self, 'connections_group_{}'.format(index))
-
-    def get_any_group(self):
-        connections_group = {}
-        connections_group.update(self.connections_group_0)
-        connections_group.update(self.connections_group_1)
-        return connections_group
-
-    def find_waiting_connection(self, group):
-        for connection, params in group.items():
-            if params.get('state') == 'waiting':
-                return connection
-        return None
 
     def sign_message(self, message):
         return self.crypt_tools.sign_message(message)
