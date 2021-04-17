@@ -39,7 +39,6 @@ class ServerHandler(protocol.GeneralProtocol):
     def do_swarm_peer_response(self, connection):
         logger.info('')
         self.set_fingerprint_to_connection_from_swarm_peer_request(connection)
-        self.net_pool.save_connection(connection)
         neighbour_connection = self.net_pool.find_neighbour(connection)
         if neighbour_connection:
             self.send_swarm_response(connection, neighbour_connection)
@@ -53,14 +52,8 @@ class ServerHandler(protocol.GeneralProtocol):
 
     def handle_disconnect(self, connections):
         for connection in connections:
-            if self.get_disconnect_flag(connection) != self.disconnect_flag:
-                continue
-            self.disconnect(connection)
-
-    def disconnect(self, connection):
-        group = self.get_connection_group(connection)
-        del group[connection]
-        connection.shutdown()
+            if self.net_pool.can_be_disconnected(connection):
+                self.net_pool.disconnect(connection)
 
     def set_fingerprint_to_connection_from_swarm_peer_request(self, connection):
         client_fingerprint = self.parse_swarm_peer_request(connection)['client_fingerprint']
@@ -71,20 +64,11 @@ class ServerHandler(protocol.GeneralProtocol):
         neighbour_sign_message = self.make_connection_message(neighbour_connection, connection)
         connection.send(sign_message)
         neighbour_connection.send(neighbour_sign_message)
-        return neighbour_connection
 
     def get_disconnect_flag(self, connection):
-        param = self.get_connection_param(connection)
-        connection_groups = param.get('groups', set())
-        group = self.get_connection_group(connection)
-        return self.disconnect_flag if len(group) > settings.peer_connections and len(connection_groups) == 2 else self.keep_connection_flag
-
-    def get_connection_group(self, connection):
-        if connection in self.connections_group_0:
-            return self.connections_group_0
-        if connection in self.connections_group_1:
-            return self.connections_group_1
-        return None
+        if self.net_pool.can_be_disconnected(connection):
+            return self.disconnect_flag
+        self.keep_connection_flag
 
     def make_connection_message(self, connection0, connection1):
         disconnect_flag = self.get_disconnect_flag(connection0)
@@ -107,7 +91,7 @@ class ServerHandler(protocol.GeneralProtocol):
         return self.crypt_tools.sign_message(message)
 
 
-class Server(host.UDPHost):
+class Server(host.Host):
     async def run(self):
         logger.info('')
         await self.create_listener(settings.default_port)

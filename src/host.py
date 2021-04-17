@@ -14,7 +14,7 @@ from connection import Connection, NetPool
 import utilit
 
 
-class UDPHost:
+class Host:
     def __init__(self, handler):
         logger.debug('')
         self.handler = handler

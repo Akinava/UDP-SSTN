@@ -128,6 +128,13 @@ class NetPool(Singleton):
     def __get_connection_param(self, connection):
         return self.group_0.get(connection) or self.group_1.get(connection)
 
+    def __get_connection_group(self, connection):
+        if connection in self.group_0:
+            return self.group_0
+        if connection in self.group_1:
+            return self.group_1
+        return None
+
     def __find_waiting_connection(self, connections):
         for connection, params in connections.items():
             if params.get('state') == 'waiting':
@@ -144,17 +151,38 @@ class NetPool(Singleton):
         neighbour_connection = self.__find_waiting_connection(connections)
         return neighbour_connection
 
-    def save_connection(self, connection):
+    def save_connection(self, request, remote_addr, transport):
+        connection = Connection()
+        connection.datagram_received(request, remote_addr, transport)
+
+        # TODO update connection last_response and request
+        # TODO find exist connetion | make group as list | add param to connect
+        # TODO check if the transport the same for all request which has the same remote_addr
+
         if connection in self.group_0 or connection in self.group_1:
-            return
+            return self.group_0.get(connection) or
         if len(self.group_0) > len(self.group_1):
             self.group_1[connection] = {}
-            return
-        self.group_0[connection] = {}
+        else:
+            self.group_0[connection] = {}
+        return connection
 
     def get_all_connections(self):
         group_all = self.__join_groups()
         return self.__clean_groups(group_all)
+
+    def can_be_disconnected(self, connection):
+        group = self.__get_connection_group(connection)
+        param = self.__get_connection_param(connection)
+        connection_groups = param.get('groups', set())
+        group_has_enough_connections = len(group) > settings.peer_connections
+        connection_connected_to_all_groups  = len(connection_groups) == 2
+        return group_has_enough_connections and connection_connected_to_all_groups
+
+    def disconnect(self, connection):
+        group = self.__get_connection_group(connection)
+        del group[connection]
+        connection.shutdown()
 
     def clean(self):
         for connection, _ in self.__join_groups():
