@@ -30,7 +30,6 @@ class GeneralProtocol:
         connection = Connection()
         connection.datagram_received(request, remote_addr, self.transport)
         self.net_pool.save_connection(request, remote_addr, self.transport)
-        self.net_pool.update_last_response_time(connection)
         self.handle(connection)
 
     def connection_lost(self, remote_addr):

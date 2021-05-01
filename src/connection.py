@@ -147,36 +147,66 @@ class NetPool(Singleton):
         if len(connection_groups_index) != 1:
             connections = self.get_all_connections()
         else:
-            connections = self.get_group_by_index(binary_not(next(iter(connection_groups_index))))
+            connections = self.__get_group_by_index(binary_not(next(iter(connection_groups_index))))
         neighbour_connection = self.__find_waiting_connection(connections)
         return neighbour_connection
+
+    def __get_group_by_index(self, index):
+        return getattr(self, 'group_{}'.format(index))
 
     def save_connection(self, request, remote_addr, transport):
         connection = Connection()
         connection.datagram_received(request, remote_addr, transport)
 
-        # TODO update connection last_response and request
-        # TODO find exist connetion | make group as list | add param to connect
-        # TODO check if the transport the same for all request which has the same remote_addr
+        if not self.self.__get_connection_group(connection) is None:
+            self.__update_connection_in_group(connection)
+            return
 
-        if connection in self.group_0 or connection in self.group_1:
-            return self.group_0.get(connection) or
+        self.__put_connection_in_group(connection)
+
+    def __put_connection_in_group(self, connection):
+        state = {'state': 'waiting', 'groups': set()}
         if len(self.group_0) > len(self.group_1):
-            self.group_1[connection] = {}
+            self.group_1[connection] = state
         else:
-            self.group_0[connection] = {}
-        return connection
+            self.group_0[connection] = state
+
+    def __update_connection_in_group(self, connection):
+        group = self.__get_connection_group(connection)
+        param = self.__get_connection_param(connection)
+        param['state'] = 'waiting'
+        group[connection] = param
 
     def get_all_connections(self):
         group_all = self.__join_groups()
         return self.__clean_groups(group_all)
+
+    def update_neighbour_group(self, connection0, connection1):
+        if connection0 is None or connection1 is None:
+            return
+        connection0_group_index = self.self.__get_connection_group_index(connection0)
+        connection1_group_index = self.self.__get_connection_group_index(connection1)
+        param0 = self.__get_connection_param(connection0)
+        param1 = self.__get_connection_param(connection1)
+        param0['groups'].add(connection0_group_index)
+        param1['groups'].add(connection1_group_index)
+
+    def update_state(self, connection, state):
+        param = self.__get_connection_param(connection)
+        param['state'] = state
+
+    def __get_connection_group_index(self, connection):
+        if connection in self.group_0:
+            return 0
+        if connection in self.group_1:
+            return 1
 
     def can_be_disconnected(self, connection):
         group = self.__get_connection_group(connection)
         param = self.__get_connection_param(connection)
         connection_groups = param.get('groups', set())
         group_has_enough_connections = len(group) > settings.peer_connections
-        connection_connected_to_all_groups  = len(connection_groups) == 2
+        connection_connected_to_all_groups  = len(connection_groups) == len(self.group_0, self.group_1)
         return group_has_enough_connections and connection_connected_to_all_groups
 
     def disconnect(self, connection):
