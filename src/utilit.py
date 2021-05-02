@@ -37,10 +37,10 @@ def read_config_file():
 
 def import_config():
     options, args = get_args.parser()
-    options_keys = vars(options)
+    options_items = vars(options)
     config = read_config_file()
     for k, v in config.items():
-        if k in options_keys:
+        if k in options_items and not getattr(options, k) is None:
             continue
         setattr(settings, k, v)
 
