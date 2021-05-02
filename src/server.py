@@ -101,5 +101,8 @@ class Server(host.Host):
 if __name__ == '__main__':
     logger.info('server start')
     server = Server(handler=ServerHandler)
-    asyncio.run(server.run())
+    try:
+        asyncio.run(server.run())
+    except KeyboardInterrupt:
+        logger.info('server interrupted')
     logger.info('server shutdown')
