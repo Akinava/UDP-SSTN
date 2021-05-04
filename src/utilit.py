@@ -35,6 +35,7 @@ def read_config_file():
     with open(settings.config_file, 'r') as cfg_file:
         return json.loads(cfg_file.read())
 
+
 def import_config():
     options, args = get_args.parser()
     options_items = vars(options)
