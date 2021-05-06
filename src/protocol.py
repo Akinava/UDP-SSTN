@@ -74,9 +74,9 @@ class GeneralProtocol:
         return getattr(self, response_function_name)
 
     def define_swarm_ping(self, connection):
-        if connection.get_request() == '':
+        if connection.get_request() == b'':
             return True
         return False
 
     def do_swarm_ping(self, connection):
-        connection.send('')
+        connection.send(b'')

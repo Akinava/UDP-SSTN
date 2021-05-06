@@ -8,6 +8,7 @@ __version__ = [0, 0]
 
 import struct
 from time import time
+import itertools
 from utilit import Singleton, next_element_of_ring
 import settings
 from settings import logger
@@ -63,6 +64,9 @@ class Connection:
     def get_request(self):
         return self.__request
 
+    def update_request(self, connection):
+        self.__request = connection.get_request()
+
     def set_fingerprint(self, fingerprint):
         self.fingerprint = fingerprint
 
@@ -99,26 +103,20 @@ class Connection:
 
 class NetPool(Singleton):
     def __init__(self):
-        self.__groups = [{}, {}]
+        self.__groups = [[], []]
 
     def __clean_groups(self):
         for group_index in range(len(self.__groups)):
-            alive_group_tmp = {}
-            for connection, param in self.__groups[group_index].items():
+            alive_group_tmp = []
+            for connection in self.__groups[group_index]:
                 if connection.last_request_is_time_out():
                     connection.shutdown()
                     continue
-                alive_group_tmp[connection] = param
+                alive_group_tmp.append(connection)
             self.__groups[group_index] = alive_group_tmp
 
     def __join_groups(self):
-        result_group = {}
-        for group in self.__groups:
-            result_group.update(group)
-        return result_group
-
-    def __get_connection_param(self, connection):
-        return self.__join_groups().get(connection)
+        return list(itertools.chain.from_iterable(self.__groups))
 
     def __get_connection_group(self, connection):
         for group in self.__groups:
@@ -127,15 +125,14 @@ class NetPool(Singleton):
         return None
 
     def __find_waiting_connection(self, group):
-        for connection, params in group.items():
-            if params.get('state') == 'waiting':
+        for connection in group:
+            if connection.state == 'waiting':
                 return connection
         return None
 
     def find_neighbour(self, connection):
         self.__clean_groups()
-        param = self.__get_connection_param(connection)
-        connection_groups_index = param.get('groups', set())
+        connection_groups_index = connection.groups
         if len(connection_groups_index) != 1:
             group = self.get_all_connections()
         else:
@@ -145,27 +142,27 @@ class NetPool(Singleton):
         neighbour_connection = self.__find_waiting_connection(group)
         return neighbour_connection
 
-    def __get_group_by_index(self, index):
-        return self.__groups[index]
-
     def save_connection(self, connection):
+        connection.state = 'waiting'
         if not self.self.__get_connection_group(connection) is None:
-            self.__update_connection_in_group(connection)
+            self.__update_connection(connection)
             self.update_state(connection, 'waiting')
             return
         self.__put_connection_in_group(connection)
 
     def __put_connection_in_group(self, connection):
-        state = {'state': 'waiting', 'groups': set()}
-        if len(self.group_0) > len(self.group_1):
-            self.group_1[connection] = state
-        else:
-            self.group_0[connection] = state
+        connection.state = 'waiting'
+        connection.groups = set()
+        groups_size_list = list(map(len, self.groups))
+        min_size = min(groups_size_list)
+        min_group_index = groups_size_list.index(min_size)
+        self.groups[min_group_index].append(connection)
 
-    def __update_connection_in_group(self, connection):
-        group = self.__get_connection_group(connection)
-        param = self.__get_connection_param(connection)
-        group[connection] = param
+    def __update_connection(self, new_connection):
+        group = self.__join_groups()
+        connection_index = group.index(new_connection)
+        save_connection = group[connection_index]
+        save_connection.update_request(new_connection)
 
     def get_all_connections(self):
         self.__clean_groups()
@@ -175,37 +172,33 @@ class NetPool(Singleton):
     def update_neighbour_group(self, connection0, connection1):
         if connection0 is None or connection1 is None:
             return
-        connection0_group_index = self.self.__get_connection_group_index(connection0)
-        connection1_group_index = self.self.__get_connection_group_index(connection1)
-        param0 = self.__get_connection_param(connection0)
-        param1 = self.__get_connection_param(connection1)
-        param0['groups'].add(connection0_group_index)
-        param1['groups'].add(connection1_group_index)
+        connection0_group_index = self.__get_connection_group_index(connection0)
+        connection1_group_index = self.__get_connection_group_index(connection1)
+        connection0.groups.add(connection0_group_index)
+        connection1.groups.add(connection1_group_index)
 
     def update_state(self, connection, state):
-        param = self.__get_connection_param(connection)
-        param['state'] = state
+        connection.state = state
 
     def __get_connection_group_index(self, connection):
-        if connection in self.group_0:
-            return 0
-        if connection in self.group_1:
-            return 1
+        for index in range(len(self.groups)):
+            if connection in self.groups[index]:
+                return index
 
     def can_be_disconnected(self, connection):
         group = self.__get_connection_group(connection)
-        param = self.__get_connection_param(connection)
-        connection_groups = param.get('groups', set())
+        connection_groups = connection.groups
         group_has_enough_connections = len(group) > settings.peer_connections
-        connection_connected_to_all_groups  = len(connection_groups) == len(self.group_0, self.group_1)
+        connection_connected_to_all_groups  = len(connection_groups) == len(self.groups)
         return group_has_enough_connections and connection_connected_to_all_groups
 
     def disconnect(self, connection):
         group = self.__get_connection_group(connection)
-        del group[connection]
+        group.remove(connection)
         connection.shutdown()
 
     def shutdown(self):
-        for connection, _ in self.__join_groups():
-            connection.shutdown()
-        self.group_0, self.group_1 = {}, {}
+        for index in range(len(self.groups)):
+            for connection in self.groups[index]:
+                connection.shutdown()
+            self.groups[index] = []
