@@ -15,10 +15,10 @@ from connection import Connection, NetPool
 class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
-        self.net_pool = NetPool()
-        self.crypt_tools = crypt_tools.Tools()
+        self.__net_pool = NetPool()
+        self.__crypt_tools = crypt_tools.Tools()
         self.response = message
-        self.on_con_lost = on_con_lost
+        self.__on_con_lost = on_con_lost
         self.transport = None
 
     def connection_made(self, transport):
@@ -26,16 +26,16 @@ class GeneralProtocol:
         self.transport = transport
 
     def datagram_received(self, request, remote_addr):
-        logger.info('request %s from %s' % (request, remote_addr))
+        logger.info('__request %s from %s' % (request, remote_addr))
         connection = Connection()
         connection.datagram_received(request, remote_addr, self.transport)
-        self.net_pool.save_connection(request, remote_addr, self.transport)
+        self.__net_pool.save_connection(connection)
         self.handle(connection)
 
     def connection_lost(self, remote_addr):
         connection = Connection()
         connection.set_remote_addr(remote_addr)
-        connection.shutdown()
+        self.__crypt_tools.disconnect(connection)
 
     def handle(self, connection):
         logger.debug('')
@@ -62,7 +62,7 @@ class GeneralProtocol:
                 continue
             request_name = function_name.replace('define_', '')
             return request_name
-        logger.warn('GeneralProtocol can not define request')
+        logger.warn('GeneralProtocol can not define __request')
 
     def get_response_function(self, request_name):
         response_name = self.protocol[request_name]
@@ -78,5 +78,5 @@ class GeneralProtocol:
             return True
         return False
 
-    def do_swarm_ping(self):
-        return ''
+    def do_swarm_ping(self, connection):
+        connection.send('')

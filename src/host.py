@@ -54,10 +54,11 @@ class Host:
 
     def __ping_connections(self):
         for connection in self.__net_pool.get_all_connections():
-            connection.send(self.__handler.do_swarm_ping())
+            if connection.last_response_is_over_ping_time():
+                self.__handler.do_swarm_ping(connection)
 
     def __shutdown_connections(self):
-        self.__net_pool.clean()
+        self.__net_pool.shutdown()
 
     def __config_reload(self):
         logger.debug('')

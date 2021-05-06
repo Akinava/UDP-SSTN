@@ -20,7 +20,7 @@ class ServerHandler(protocol.GeneralProtocol):
     keep_connection_flag = b'\x00'
 
     protocol = {
-        'request': 'response',
+        '__request': 'response',
         'swarm_ping': None,
         'swarm_peer_request': 'swarm_peer_response',
     }
@@ -33,21 +33,21 @@ class ServerHandler(protocol.GeneralProtocol):
         return True
 
     def __verify_len_swarm_peer_request(self, connection):
-        return self.crypt_tools.get_fingerprint_len() * 2 == len(connection.get_request())
+        return self.__crypt_tools.get_fingerprint_len() * 2 == len(connection.get_request())
 
     def __verify_my_fingerprint_in_swarm_peer_request(self, connection):
         my_fingerprint = self.__parse_swarm_peer_request(connection)['my_fingerprint']
-        return my_fingerprint == self.crypt_tools.get_fingerprint()
+        return my_fingerprint == self.__crypt_tools.get_fingerprint()
 
     def __parse_swarm_peer_request(self, connection):
         request = connection.get_request()
-        my_fingerprint, client_fingerprint = unpack_stream(request, self.crypt_tools.get_fingerprint_len())
+        my_fingerprint, client_fingerprint = unpack_stream(request, self.__crypt_tools.get_fingerprint_len())
         return {'my_fingerprint': my_fingerprint, 'client_fingerprint': client_fingerprint}
 
     def do_swarm_peer_response(self, connection):
         logger.info('')
         self.__set_fingerprint_to_connection_from_swarm_peer_request(connection)
-        neighbour_connection = self.net_pool.find_neighbour(connection)
+        neighbour_connection = self.__net_pool.find_neighbour(connection)
         if neighbour_connection:
             self.__send_swarm_response(connection, neighbour_connection)
             self.__handle_disconnect(connection, neighbour_connection)
@@ -59,8 +59,8 @@ class ServerHandler(protocol.GeneralProtocol):
 
     def __handle_disconnect(self, *connections):
         for connection in connections:
-            if self.net_pool.can_be_disconnected(connection):
-                self.net_pool.disconnect(connection)
+            if self.__net_pool.can_be_disconnected(connection):
+                self.__net_pool.disconnect(connection)
 
     def __set_fingerprint_to_connection_from_swarm_peer_request(self, connection):
         client_fingerprint = self.parse_swarm_peer_request(connection)['client_fingerprint']
@@ -73,7 +73,7 @@ class ServerHandler(protocol.GeneralProtocol):
         neighbour_connection.send(neighbour_sign_message)
 
     def __get_disconnect_flag(self, connection):
-        if self.net_pool.can_be_disconnected(connection):
+        if self.__net_pool.can_be_disconnected(connection):
             return self.disconnect_flag
         self.keep_connection_flag
 
@@ -83,12 +83,12 @@ class ServerHandler(protocol.GeneralProtocol):
         return self.sign_message(message)
 
     def __save_connection_param(self, connection, neighbour_connection, state):
-        self.net_pool.update_neighbour_group(connection, neighbour_connection)
-        self.net_pool.update_state(connection, state)
-        self.net_pool.update_state(neighbour_connection, state)
+        self.__net_pool.update_neighbour_group(connection, neighbour_connection)
+        self.__net_pool.update_state(connection, state)
+        self.__net_pool.update_state(neighbour_connection, state)
 
     def sign_message(self, message):
-        return self.crypt_tools.sign_message(message)
+        return self.__crypt_tools.sign_message(message)
 
 
 class Server(host.Host):

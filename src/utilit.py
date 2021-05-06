@@ -88,11 +88,15 @@ def get_rundom_peer(peers):
 def pack_host(host):
     return ''.join(map(chr, (map(int, map(str, host.split('.')))))).encode()
 
+
 def pack_port(port):
     return struct.pack('H', port)
 
-def binary_not(b):
-    return 1 - b
+
+def next_element_of_ring(current, all_elements):
+    next_element = current + 1
+    return 0 if next_element == len(all_elements) else next_element
+
 
 def unpack_stream(data, length):
     return data[ :length], data[length: ]

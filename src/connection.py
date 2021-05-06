@@ -8,66 +8,66 @@ __version__ = [0, 0]
 
 import struct
 from time import time
-from utilit import Singleton, binary_not
+from utilit import Singleton, next_element_of_ring
 import settings
 from settings import logger
 
 
 class Connection:
     def __init__(self):
-        self.set_last_response()
+        self.__set_last_response()
+        self.__set_last_request()
 
     def __eq__(self, connection):
-        if self.remote_host != connection.remote_host:
+        if self.__remote_host != connection.__remote_host:
             return False
-        if self.remote_port != connection.remote_port:
+        if self.__remote_port != connection.__remote_port:
             return False
         return True
-
-    def loads(self, connection_data):
-        for key, val in connection_data.items():
-            if key in ['host', 'port']:
-                key = 'remote_{}'.format(key)
-            setattr(self, key, val)
-        return self
 
     def is_alive(self):
         if self.transport.is_closing():
             return False
         return True
 
-    def is_time_out(self):
-        return time() - self.last_response > settings.peer_timeout_seconds
+    def last_request_is_time_out(self):
+        return time() - self.__last_request > settings.peer_timeout_seconds
 
-    def set_last_response(self):
-        self.last_response = time()
+    def last_response_is_over_ping_time(self):
+        return time() - self.__last_response > settings.peer_ping_time_seconds
+
+    def __set_last_response(self):
+        self.__last_response = time()
+
+    def __set_last_request(self):
+        self.__last_request = time()
 
     def set_transport(self, transport):
         self.transport = transport
 
     def set_protocol(self, protocol):
-        self.protocol = protocol
+        self.__protocol = protocol
 
     def set_local_port(self, local_port):
         self.local_port = local_port
 
     def get_remote_addr(self):
-        return self.remote_host, self.remote_port
+        return self.__remote_host, self.__remote_port
 
     def set_remote_host(self, remote_host):
-        self.remote_host = remote_host
+        self.__remote_host = remote_host
 
     def get_remote_host(self):
-        return self.remote_host
+        return self.__remote_host
 
     def set_remote_port(self, remote_port):
-        self.remote_port = remote_port
+        self.__remote_port = remote_port
 
     def set_request(self, request):
-        self.request = request
+        self.__request = request
 
     def get_request(self):
-        return self.request
+        return self.__request
 
     def set_fingerprint(self, fingerprint):
         self.fingerprint = fingerprint
@@ -76,7 +76,7 @@ class Connection:
         return self.fingerprint
 
     def dump_addr(self):
-        return struct.pack('>BBBBH', *(map(int, self.remote_host.split('.'))), self.remote_port)
+        return struct.pack('>BBBBH', *(map(int, self.__remote_host.split('.'))), self.__remote_port)
 
     def load_addr(self, data):
         port = struct.unpack('>H', data[4:6])
@@ -100,68 +100,71 @@ class Connection:
 
     def send(self, response):
         logger.info('')
-        self.transport.sendto(response, (self.remote_host, self.remote_port))
+        self.__set_last_response()
+        self.transport.sendto(response, (self.__remote_host, self.__remote_port))
 
     def shutdown(self):
+        if self.transport.is_closing():
+            return
         self.transport.close()
 
 
 class NetPool(Singleton):
     def __init__(self):
-        self.group_0, self.group_1 = {}, {}
+        self.__groups = [{}, {}]
 
-    def __clean_groups(self, group):
-        group_alive = []
-        for connection in group:
-            if connection.is_time_out():
-                connection.shutdown()
-                continue
-            group_alive.append(connection)
-        return group_alive
+    def __clean_groups(self):
+        for group_index in range(len(self.__groups)):
+            alive_group_tmp = {}
+            for connection, param in self.__groups[group_index].items():
+                if connection.last_request_is_time_out():
+                    connection.shutdown()
+                    continue
+                alive_group_tmp[connection] = param
+            self.__groups[group_index] = alive_group_tmp
 
     def __join_groups(self):
-        group = {}
-        group.update(self.group_0)
-        group.update(self.group_1)
-        return group
+        result_group = {}
+        for group in self.__groups:
+            result_group.update(group)
+        return result_group
 
     def __get_connection_param(self, connection):
-        return self.group_0.get(connection) or self.group_1.get(connection)
+        return self.__join_groups().get(connection)
 
     def __get_connection_group(self, connection):
-        if connection in self.group_0:
-            return self.group_0
-        if connection in self.group_1:
-            return self.group_1
+        for group in self.__groups:
+            if connection in group:
+                return group
         return None
 
-    def __find_waiting_connection(self, connections):
-        for connection, params in connections.items():
+    def __find_waiting_connection(self, group):
+        for connection, params in group.items():
             if params.get('state') == 'waiting':
                 return connection
         return None
 
     def find_neighbour(self, connection):
+        self.__clean_groups()
         param = self.__get_connection_param(connection)
         connection_groups_index = param.get('groups', set())
         if len(connection_groups_index) != 1:
-            connections = self.get_all_connections()
+            group = self.get_all_connections()
         else:
-            connections = self.__get_group_by_index(binary_not(next(iter(connection_groups_index))))
-        neighbour_connection = self.__find_waiting_connection(connections)
+            current_group_index = next(iter(connection_groups_index))
+            required_group_index = next_element_of_ring(current_group_index)
+            group = self.__groups[required_group_index]
+        neighbour_connection = self.__find_waiting_connection(group)
         return neighbour_connection
 
     def __get_group_by_index(self, index):
-        return getattr(self, 'group_{}'.format(index))
+        return self.__groups[index]
 
-    def save_connection(self, request, remote_addr, transport):
-        connection = Connection()
-        connection.datagram_received(request, remote_addr, transport)
-
+    def save_connection(self, connection):
         if not self.self.__get_connection_group(connection) is None:
             self.__update_connection_in_group(connection)
+            self.update_state(connection, 'waiting')
             return
-
         self.__put_connection_in_group(connection)
 
     def __put_connection_in_group(self, connection):
@@ -174,12 +177,12 @@ class NetPool(Singleton):
     def __update_connection_in_group(self, connection):
         group = self.__get_connection_group(connection)
         param = self.__get_connection_param(connection)
-        param['state'] = 'waiting'
         group[connection] = param
 
     def get_all_connections(self):
+        self.__clean_groups()
         group_all = self.__join_groups()
-        return self.__clean_groups(group_all)
+        return group_all
 
     def update_neighbour_group(self, connection0, connection1):
         if connection0 is None or connection1 is None:
@@ -214,7 +217,7 @@ class NetPool(Singleton):
         del group[connection]
         connection.shutdown()
 
-    def clean(self):
+    def shutdown(self):
         for connection, _ in self.__join_groups():
             connection.shutdown()
         self.group_0, self.group_1 = {}, {}
