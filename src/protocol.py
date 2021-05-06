@@ -26,7 +26,7 @@ class GeneralProtocol:
         self.transport = transport
 
     def datagram_received(self, request, remote_addr):
-        logger.info('__request %s from %s' % (request, remote_addr))
+        logger.info('request %s from %s' % (request, remote_addr))
         connection = Connection()
         connection.datagram_received(request, remote_addr, self.transport)
         self.__net_pool.save_connection(connection)
@@ -40,16 +40,16 @@ class GeneralProtocol:
     def handle(self, connection):
         logger.debug('')
         # TODO make a tread
-        request_name = self.define_request(connection)
+        request_name = self.__define_request(connection)
         logger.info('GeneralProtocol function defined as {}'.format(request_name))
         if request_name is None:
             return
-        response_function = self.get_response_function(request_name)
+        response_function = self.__get_response_function(request_name)
         if response_function is None:
             return
         return response_function(connection)
 
-    def define_request(self, connection):
+    def __define_request(self, connection):
         logger.debug('')
         self_functions = dir(self)
         for function_name in self_functions:
@@ -64,7 +64,7 @@ class GeneralProtocol:
             return request_name
         logger.warn('GeneralProtocol can not define __request')
 
-    def get_response_function(self, request_name):
+    def __get_response_function(self, request_name):
         response_name = self.protocol[request_name]
         logger.info('GeneralProtocol response_name {}'.format(response_name))
         response_function_name = 'do_{}'.format(response_name)

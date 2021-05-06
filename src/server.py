@@ -51,9 +51,9 @@ class ServerHandler(protocol.GeneralProtocol):
         if neighbour_connection:
             self.__send_swarm_response(connection, neighbour_connection)
             self.__handle_disconnect(connection, neighbour_connection)
-        self.update_connections_state(connection, neighbour_connection)
+        self.__update_connections_state(connection, neighbour_connection)
 
-    def update_connections_state(self, connection, neighbour_connection):
+    def __update_connections_state(self, connection, neighbour_connection):
         stat = 'wait' if neighbour_connection is None else 'in_progress'
         self.__save_connection_param(connection, neighbour_connection, stat)
 
@@ -80,15 +80,15 @@ class ServerHandler(protocol.GeneralProtocol):
     def __make_connection_message(self, connection0, connection1):
         disconnect_flag = self.__get_disconnect_flag(connection0)
         message = connection0.get_fingerprint() + connection1.get_fingerprint() + connection1.dump_addr() + disconnect_flag
-        return self.sign_message(message)
+        return self.__sign_message(message)
 
     def __save_connection_param(self, connection, neighbour_connection, state):
         self.__net_pool.update_neighbour_group(connection, neighbour_connection)
         self.__net_pool.update_state(connection, state)
         self.__net_pool.update_state(neighbour_connection, state)
 
-    def sign_message(self, message):
-        return self.__crypt_tools.sign_message(message)
+    def __sign_message(self, message):
+        return self.__crypt_tools.__sign_message(message)
 
 
 class Server(host.Host):

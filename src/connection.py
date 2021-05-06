@@ -42,28 +42,22 @@ class Connection:
     def __set_last_request(self):
         self.__last_request = time()
 
-    def set_transport(self, transport):
+    def __set_transport(self, transport):
         self.transport = transport
 
-    def set_protocol(self, protocol):
+    def __set_protocol(self, protocol):
         self.__protocol = protocol
 
-    def set_local_port(self, local_port):
+    def __set_local_port(self, local_port):
         self.local_port = local_port
 
-    def get_remote_addr(self):
-        return self.__remote_host, self.__remote_port
-
-    def set_remote_host(self, remote_host):
+    def __set_remote_host(self, remote_host):
         self.__remote_host = remote_host
 
-    def get_remote_host(self):
-        return self.__remote_host
-
-    def set_remote_port(self, remote_port):
+    def __set_remote_port(self, remote_port):
         self.__remote_port = remote_port
 
-    def set_request(self, request):
+    def __set_request(self, request):
         self.__request = request
 
     def get_request(self):
@@ -78,25 +72,19 @@ class Connection:
     def dump_addr(self):
         return struct.pack('>BBBBH', *(map(int, self.__remote_host.split('.'))), self.__remote_port)
 
-    def load_addr(self, data):
-        port = struct.unpack('>H', data[4:6])
-        ip_map = struct.unpack('>BBBB', data[0:4])
-        ip = '.'.join(map, ip_map)
-        return ip, port
-
     def set_listener(self, local_port, transport, protocol):
-        self.set_protocol(protocol)
-        self.set_transport(transport)
-        self.set_local_port(local_port)
+        self.__set_protocol(protocol)
+        self.__set_transport(transport)
+        self.__set_local_port(local_port)
 
     def datagram_received(self, request, remote_addr, transport):
         self.set_remote_addr(remote_addr)
-        self.set_request(request)
-        self.set_transport(transport)
+        self.__set_request(request)
+        self.__set_transport(transport)
 
     def set_remote_addr(self, addr):
-        self.set_remote_host(addr[0])
-        self.set_remote_port(addr[1])
+        self.__set_remote_host(addr[0])
+        self.__set_remote_port(addr[1])
 
     def send(self, response):
         logger.info('')
