@@ -30,14 +30,14 @@ class GeneralProtocol:
         connection = Connection()
         connection.datagram_received(request, remote_addr, self.transport)
         self.net_pool.save_connection(connection)
-        self.handle(connection)
+        self.__handle(connection)
 
     def connection_lost(self, remote_addr):
         connection = Connection()
         connection.set_remote_addr(remote_addr)
-        self.__crypt_tools.disconnect(connection)
+        self.net_pool.disconnect(connection)
 
-    def handle(self, connection):
+    def __handle(self, connection):
         logger.debug('')
         # TODO make a tread
         request_name = self.__define_request(connection)
