@@ -15,7 +15,7 @@ from connection import Connection, NetPool
 class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
-        self.__net_pool = NetPool()
+        self.net_pool = NetPool()
         self.__crypt_tools = crypt_tools.Tools()
         self.response = message
         self.__on_con_lost = on_con_lost
@@ -29,7 +29,7 @@ class GeneralProtocol:
         logger.info('request %s from %s' % (request, remote_addr))
         connection = Connection()
         connection.datagram_received(request, remote_addr, self.transport)
-        self.__net_pool.save_connection(connection)
+        self.net_pool.save_connection(connection)
         self.handle(connection)
 
     def connection_lost(self, remote_addr):

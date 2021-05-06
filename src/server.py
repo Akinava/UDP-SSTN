@@ -47,7 +47,7 @@ class ServerHandler(protocol.GeneralProtocol):
     def do_swarm_peer_response(self, connection):
         logger.info('')
         self.__set_fingerprint_to_connection_from_swarm_peer_request(connection)
-        neighbour_connection = self.__net_pool.find_neighbour(connection)
+        neighbour_connection = self.net_pool.find_neighbour(connection)
         if neighbour_connection:
             self.__send_swarm_response(connection, neighbour_connection)
             self.__handle_disconnect(connection, neighbour_connection)
@@ -59,8 +59,8 @@ class ServerHandler(protocol.GeneralProtocol):
 
     def __handle_disconnect(self, *connections):
         for connection in connections:
-            if self.__net_pool.can_be_disconnected(connection):
-                self.__net_pool.disconnect(connection)
+            if self.net_pool.can_be_disconnected(connection):
+                self.net_pool.disconnect(connection)
 
     def __set_fingerprint_to_connection_from_swarm_peer_request(self, connection):
         client_fingerprint = self.parse_swarm_peer_request(connection)['client_fingerprint']
@@ -73,7 +73,7 @@ class ServerHandler(protocol.GeneralProtocol):
         neighbour_connection.send(neighbour_sign_message)
 
     def __get_disconnect_flag(self, connection):
-        if self.__net_pool.can_be_disconnected(connection):
+        if self.net_pool.can_be_disconnected(connection):
             return self.disconnect_flag
         self.keep_connection_flag
 
@@ -83,9 +83,9 @@ class ServerHandler(protocol.GeneralProtocol):
         return self.__sign_message(message)
 
     def __save_connection_param(self, connection, neighbour_connection, state):
-        self.__net_pool.update_neighbour_group(connection, neighbour_connection)
-        self.__net_pool.update_state(connection, state)
-        self.__net_pool.update_state(neighbour_connection, state)
+        self.net_pool.update_neighbour_group(connection, neighbour_connection)
+        self.net_pool.update_state(connection, state)
+        self.net_pool.update_state(neighbour_connection, state)
 
     def __sign_message(self, message):
         return self.__crypt_tools.__sign_message(message)
