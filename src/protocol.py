@@ -8,7 +8,7 @@ __version__ = [0, 0]
 
 import sys
 from settings import logger
-import crypt_tools
+from crypt_tools import Tools as CryptTools
 from connection import Connection, NetPool
 
 
@@ -16,7 +16,7 @@ class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
         self.net_pool = NetPool()
-        self.__crypt_tools = crypt_tools.Tools()
+        self.__crypt_tools = CryptTools()
         self.response = message
         self.__on_con_lost = on_con_lost
         self.transport = None

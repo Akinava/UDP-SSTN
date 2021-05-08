@@ -16,6 +16,7 @@ from settings import logger
 
 class Connection:
     def __init__(self):
+        # TODO extent init
         self.__set_last_response()
         self.__set_last_request()
 
