@@ -65,7 +65,7 @@ class Host:
 
     def __exit(self):
         logger.info('')
-        self.__listener.shutdown()
+        self.listener.shutdown()
         self.__shutdown_connections()
 
     def __del__(self):

@@ -85,6 +85,13 @@ class Connection:
 
     def get_fingerprint(self):
         return self.fingerprint
+    
+    def set_default_remote_port(self, default_remote_port):
+        self.default_remote_port = default_remote_port
+        
+    def get_default_remote_port(self):
+        return self.default_remote_port
+
 
     def dump_addr(self):
         return struct.pack('>BBBBH', *(map(int, self.__remote_host.split('.'))), self.__remote_port)
