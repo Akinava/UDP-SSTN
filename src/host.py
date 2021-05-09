@@ -19,7 +19,6 @@ class Host:
         logger.debug('')
         self.__handler = handler
         self.__net_pool = NetPool()
-        self.__listener = None
         self.__local_host = settings.local_host
         self.__set_posix_handler()
 
@@ -33,22 +32,22 @@ class Host:
         if signum == signal.SIGUSR1:
             self.__config_reload()
 
-    async def create_listener(self, port):
+    async def create_endpoint(self, local_host, local_port):
+        logger.info('create listener on port {}'.format(local_port))
         loop = asyncio.get_running_loop()
-        logger.info('host create_listener on port {}'.format(port))
-
         transport, protocol = await loop.create_datagram_endpoint(
             lambda: self.__handler(),
-            local_addr=(self.__local_host, port))
-        self.__listener = Connection()
-        self.__listener.set_listener(
-            local_port=port,
-            transport=transport,
-            protocol=protocol)
+            local_addr=(local_host, local_port))
+        connection = Connection(
+            local_host=local_host,
+            local_port=local_port,
+            transport=transport
+        )
+        return connection
 
     async def serve_forever(self):
         logger.debug('')
-        while self.__listener.is_alive():
+        while self.listener.is_alive():
             self.__ping_connections()
             await asyncio.sleep(settings.peer_ping_time_seconds)
 

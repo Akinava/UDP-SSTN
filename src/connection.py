@@ -15,8 +15,17 @@ from settings import logger
 
 
 class Connection:
-    def __init__(self):
-        # TODO extent init
+    def __init__(self, local_host=None, local_port=None, remote_host=None, remote_port=None, transport=None):
+        if local_host:
+            self.__set_local_host(local_host)
+        if local_port:
+            self.__set_local_port(local_port)
+        if remote_host:
+            self.__set_remote_host(remote_host)
+        if remote_port:
+            self.__set_remote_port(remote_port)
+        if transport:
+            self.__set_transport(transport)
         self.__set_last_response()
         self.__set_last_request()
 
@@ -49,6 +58,9 @@ class Connection:
 
     def __set_protocol(self, protocol):
         self.__protocol = protocol
+
+    def __set_local_host(self, local_host):
+        self.__local_host = local_host
 
     def __set_local_port(self, local_port):
         self.local_port = local_port

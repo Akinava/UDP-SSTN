@@ -94,7 +94,7 @@ class ServerHandler(protocol.GeneralProtocol):
 class Server(host.Host):
     async def run(self):
         logger.info('')
-        await self.create_listener(settings.default_port)
+        self.listener = await self.create_endpoint(settings.local_host, settings.default_port)
         await self.serve_forever()
 
 
