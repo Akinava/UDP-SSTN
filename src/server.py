@@ -43,16 +43,13 @@ class ServerHandler(protocol.GeneralProtocol):
 
     def __parse_swarm_peer_request(self, connection):
         request = connection.get_request()
-        my_fingerprint, rest_part = unpack_stream(request, self.__crypt_tools.get_fingerprint_len())
-        client_fingerprint, client_default_port = unpack_stream(rest_part, self.__crypt_tools.get_fingerprint_len())
+        my_fingerprint, client_fingerprint = unpack_stream(request, self.__crypt_tools.get_fingerprint_len())
         return {'my_fingerprint': my_fingerprint,
-                'client_fingerprint': client_fingerprint,
-                'client_default_port': client_default_port}
+                'client_fingerprint': client_fingerprint}
 
     def do_swarm_peer_response(self, connection):
         logger.info('')
         self.__set_fingerprint_to_connection_from_swarm_peer_request(connection)
-        self.__set_default_port_to_connection_from_swarm_peer_request(connection)
         neighbour_connection = self.net_pool.find_neighbour(connection)
         if neighbour_connection:
             self.__send_swarm_response(connection, neighbour_connection)
@@ -72,10 +69,6 @@ class ServerHandler(protocol.GeneralProtocol):
         client_fingerprint = self.__parse_swarm_peer_request(connection)['client_fingerprint']
         connection.set_fingerprint(client_fingerprint)
 
-    def __set_default_port_to_connection_from_swarm_peer_request(self, connection):
-        client_default_port = self.__parse_swarm_peer_request(connection)['client_default_port']
-        connection.default_remote_port(client_default_port)
-
     def __send_swarm_response(self, connection, neighbour_connection):
         sign_message = self.__make_connection_message(connection, neighbour_connection)
         neighbour_sign_message = self.__make_connection_message(neighbour_connection, connection)
@@ -92,7 +85,6 @@ class ServerHandler(protocol.GeneralProtocol):
         message = connection0.get_fingerprint() + \
                   connection1.get_fingerprint() + \
                   connection1.dump_addr() + \
-                  connection1.get_default_remote_port() + \
                   disconnect_flag
         return self.__sign_message(message)
 
