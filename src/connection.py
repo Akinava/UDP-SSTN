@@ -116,7 +116,12 @@ class Connection:
 
 class NetPool(Singleton):
     def __init__(self):
-        self.__groups = [[], []]
+        self.__groups = []
+        self.__init_groups()
+
+    def __init_groups(self):
+        for _ in range(settings.peer_groups):
+            self.__groups.append([])
 
     def __clean_groups(self):
         for group_index in range(len(self.__groups)):
