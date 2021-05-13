@@ -94,7 +94,7 @@ class ServerHandler(protocol.GeneralProtocol):
         self.net_pool.update_state(neighbour_connection, state)
 
     def __sign_message(self, message):
-        return self.__crypt_tools.__sign_message(message)
+        return self.__crypt_tools.sign_message(message)
 
 
 class Server(host.Host):
