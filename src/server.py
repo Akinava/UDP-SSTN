@@ -86,7 +86,7 @@ class ServerHandler(protocol.GeneralProtocol):
                   connection1.get_fingerprint() + \
                   connection1.dump_addr() + \
                   disconnect_flag
-        return self.__sign_message(message)
+        return message + self.__sign_message(message)
 
     def __save_connection_param(self, connection, neighbour_connection, state):
         self.net_pool.update_neighbour_group(connection, neighbour_connection)

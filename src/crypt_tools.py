@@ -15,6 +15,11 @@ from settings import logger
 
 
 class Tools(Singleton):
+    priv_key_length = 32
+    pub_key_length = 64
+    fingerprint_length = 32
+    sign_length = 64
+
     def __init__(self):
         logger.debug('')
         self.__init_ecdsa()
@@ -83,11 +88,11 @@ class Tools(Singleton):
         return self.fingerprint
 
     def get_fingerprint_len(self):
-        return len(self.get_fingerprint())
+        return self.fingerprint_length
 
     def __make_fingerprint(self):
         open_key = self.ecdsa.get_pub_key()
         self.fingerprint = sha256(open_key)
 
     def sign_message(self, message):
-        return message + self.ecdsa.sign(message) + self.ecdsa.get_pub_key()
+        return self.ecdsa.sign(message) + self.ecdsa.get_pub_key()
