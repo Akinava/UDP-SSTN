@@ -16,7 +16,7 @@ class GeneralProtocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
         self.net_pool = NetPool()
-        self.__crypt_tools = CryptTools()
+        self.crypt_tools = CryptTools()
         self.response = message
         self.__on_con_lost = on_con_lost
         self.transport = None
@@ -55,14 +55,14 @@ class GeneralProtocol:
         for function_name in self_functions:
             if function_name == sys._getframe().f_code.co_name:
                 continue
-            if not 'define_' in function_name:
+            if not function_name.startswith('define_'):
                 continue
             define_function = getattr(self, function_name)
             if not define_function(connection) is True:
                 continue
             request_name = function_name.replace('define_', '')
             return request_name
-        logger.warn('GeneralProtocol can not define __request')
+        logger.warn('GeneralProtocol can not define request')
 
     def __get_response_function(self, request_name):
         response_name = self.protocol[request_name]

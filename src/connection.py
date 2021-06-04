@@ -162,7 +162,7 @@ class NetPool(Singleton):
 
     def save_connection(self, connection):
         connection.state = 'waiting'
-        if not self.self.__get_connection_group(connection) is None:
+        if not self.__get_connection_group(connection) is None:
             self.__update_connection(connection)
             self.update_state(connection, 'waiting')
             return
@@ -171,10 +171,10 @@ class NetPool(Singleton):
     def __put_connection_in_group(self, connection):
         connection.state = 'waiting'
         connection.groups = set()
-        groups_size_list = list(map(len, self.groups))
+        groups_size_list = list(map(len, self.__groups))
         min_size = min(groups_size_list)
         min_group_index = groups_size_list.index(min_size)
-        self.groups[min_group_index].append(connection)
+        self.__groups[min_group_index].append(connection)
 
     def __update_connection(self, new_connection):
         group = self.__join_groups()
@@ -199,15 +199,15 @@ class NetPool(Singleton):
         connection.state = state
 
     def __get_connection_group_index(self, connection):
-        for index in range(len(self.groups)):
-            if connection in self.groups[index]:
+        for index in range(len(self.__groups)):
+            if connection in self.__groups[index]:
                 return index
 
     def can_be_disconnected(self, connection):
         group = self.__get_connection_group(connection)
         connection_groups = connection.groups
         group_has_enough_connections = len(group) > settings.peer_connections
-        connection_connected_to_all_groups  = len(connection_groups) == len(self.groups)
+        connection_connected_to_all_groups  = len(connection_groups) == len(self.__groups)
         return group_has_enough_connections and connection_connected_to_all_groups
 
     def disconnect(self, connection):
@@ -216,7 +216,7 @@ class NetPool(Singleton):
         connection.shutdown()
 
     def shutdown(self):
-        for index in range(len(self.groups)):
-            for connection in self.groups[index]:
+        for index in range(len(self.__groups)):
+            for connection in self.__groups[index]:
                 connection.shutdown()
-            self.groups[index] = []
+            self.__groups[index] = []

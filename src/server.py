@@ -33,17 +33,17 @@ class ServerHandler(protocol.GeneralProtocol):
         return True
 
     def __verify_len_swarm_peer_request(self, connection):
-        fingerprint_len = self.__crypt_tools.get_fingerprint_len()
+        fingerprint_len = self.crypt_tools.get_fingerprint_len()
         port_info_len = 4
-        return fingerprint_len * 2 + port_info_len == len(connection.get_request())
+        return fingerprint_len * 2 == len(connection.get_request())
 
     def __verify_my_fingerprint_in_swarm_peer_request(self, connection):
         my_fingerprint = self.__parse_swarm_peer_request(connection)['my_fingerprint']
-        return my_fingerprint == self.__crypt_tools.get_fingerprint()
+        return my_fingerprint == self.crypt_tools.get_fingerprint()
 
     def __parse_swarm_peer_request(self, connection):
         request = connection.get_request()
-        my_fingerprint, client_fingerprint = unpack_stream(request, self.__crypt_tools.get_fingerprint_len())
+        my_fingerprint, client_fingerprint = unpack_stream(request, self.crypt_tools.get_fingerprint_len())
         return {'my_fingerprint': my_fingerprint,
                 'client_fingerprint': client_fingerprint}
 
@@ -78,7 +78,7 @@ class ServerHandler(protocol.GeneralProtocol):
     def __get_disconnect_flag(self, connection):
         if self.net_pool.can_be_disconnected(connection):
             return self.disconnect_flag
-        self.keep_connection_flag
+        return self.keep_connection_flag
 
     def __make_connection_message(self, connection0, connection1):
         disconnect_flag = self.__get_disconnect_flag(connection0)
@@ -94,7 +94,7 @@ class ServerHandler(protocol.GeneralProtocol):
         self.net_pool.update_state(neighbour_connection, state)
 
     def __sign_message(self, message):
-        return self.__crypt_tools.sign_message(message)
+        return self.crypt_tools.sign_message(message)
 
 
 class Server(host.Host):
