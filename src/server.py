@@ -11,11 +11,11 @@ import asyncio
 import settings
 from settings import logger
 import host
-import protocol
+import handler
 from utilit import unpack_stream
 
 
-class ServerHandler(protocol.GeneralProtocol):
+class ServerHandler(handler.Protocol):
     disconnect_flag = b'\xff'
     keep_connection_flag = b'\x00'
 

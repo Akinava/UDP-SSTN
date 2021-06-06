@@ -12,7 +12,7 @@ from crypt_tools import Tools as CryptTools
 from connection import Connection, NetPool
 
 
-class GeneralProtocol:
+class Protocol:
     def __init__(self, message=None, on_con_lost=None):
         logger.debug('')
         self.net_pool = NetPool()
