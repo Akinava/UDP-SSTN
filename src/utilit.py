@@ -8,7 +8,6 @@ __version__ = [0, 0]
 
 import json
 import sys
-import random
 import struct
 import logging
 import settings
@@ -20,6 +19,10 @@ class Singleton(object):
         if not hasattr(cls, '_instance'):
             cls._instance = super(Singleton, cls).__new__(cls)
         return cls._instance
+
+
+class NULL(Singleton):
+    pass
 
 
 def setup_logger():
@@ -72,7 +75,3 @@ def pack_port(port):
 def next_element_of_ring(current, all_elements):
     next_element = current + 1
     return 0 if next_element == len(all_elements) else next_element
-
-
-def unpack_stream(data, length):
-    return data[ :length], data[length: ]

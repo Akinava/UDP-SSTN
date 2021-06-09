@@ -6,12 +6,12 @@ __license__ = 'MIT License'
 __version__ = [0, 0]
 
 
-import struct
 from time import time
 import itertools
 from utilit import Singleton, next_element_of_ring
 import settings
 from settings import logger
+from crypt_tools import Tools as CryptTools
 
 
 class Connection:
@@ -80,14 +80,14 @@ class Connection:
     def update_request(self, connection):
         self.__request = connection.get_request()
 
-    def set_fingerprint(self, fingerprint):
-        self.fingerprint = fingerprint
+    def set_open_key(self, open_key):
+        self.open_key = open_key
+
+    def get_open_key(self):
+        return self.open_key
 
     def get_fingerprint(self):
-        return self.fingerprint
-
-    def dump_addr(self):
-        return struct.pack('>BBBBH', *(map(int, self.__remote_host.split('.'))), self.__remote_port)
+        return CryptTools().make_fingerprint(self.open_key)
 
     def set_listener(self, local_port, transport, protocol):
         self.__set_protocol(protocol)
@@ -102,6 +102,15 @@ class Connection:
     def set_remote_addr(self, addr):
         self.__set_remote_host(addr[0])
         self.__set_remote_port(addr[1])
+
+    def get_remote_addr(self):
+        return (self.__remote_host, self.__remote_port)
+
+    def set_encrypt_marker(self, encrypt_marker):
+        self.__encrypt_marker = encrypt_marker
+
+    def get_encrypt_marker(self):
+        return self.__encrypt_marker
 
     def send(self, response):
         logger.info('')

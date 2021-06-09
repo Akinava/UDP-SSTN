@@ -15,9 +15,10 @@ import utilit
 
 
 class Host:
-    def __init__(self, handler):
+    def __init__(self, handler, protocol):
         logger.debug('')
         self.__handler = handler
+        self.__protocol = protocol
         self.__net_pool = NetPool()
         self.__local_host = settings.local_host
         self.__set_posix_handler()
@@ -36,7 +37,7 @@ class Host:
         logger.info('create listener on port {}'.format(local_port))
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-            lambda: self.__handler(),
+            lambda: self.__handler(protocol=self.__protocol),
             local_addr=(local_host, local_port))
         connection = Connection(
             local_host=local_host,
@@ -54,7 +55,7 @@ class Host:
     def __ping_connections(self):
         for connection in self.__net_pool.get_all_connections():
             if connection.last_response_is_over_ping_time():
-                self.__handler.do_swarm_ping(connection)
+                self.__handler(connection=connection).do_swarm_ping()
 
     def __shutdown_connections(self):
         self.__net_pool.shutdown()

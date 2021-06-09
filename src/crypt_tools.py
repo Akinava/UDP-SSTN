@@ -15,6 +15,8 @@ from settings import logger
 
 
 class Tools(Singleton):
+    encrypted_marker = 1
+    not_encrypted_marker = 0
     priv_key_length = 32
     pub_key_length = 64
     fingerprint_length = 32
@@ -62,8 +64,9 @@ class Tools(Singleton):
         ecdsa_priv_key_b58 = shadow_data.get('ecdsa', {}).get('key')
         if ecdsa_priv_key_b58 is None:
             return False
-        ecdsa_priv_key = B58().unpack(ecdsa_priv_key_b58)
-        self.ecdsa = ECDSA(priv_key=ecdsa_priv_key)
+        priv_key = B58().unpack(ecdsa_priv_key_b58)
+        self.ecdsa = ECDSA(priv_key=priv_key)
+        self.ecdh = ECDH(priv_key=priv_key)
         return True
 
     def __generate_new_ecdsa(self):
@@ -84,15 +87,24 @@ class Tools(Singleton):
     def get_fingerprint(self):
         logger.debug('')
         if not hasattr(self, 'fingerprint'):
-            self.__make_fingerprint()
+            self.make_fingerprint(self.ecdsa.get_pub_key())
         return self.fingerprint
 
     def get_fingerprint_len(self):
         return self.fingerprint_length
 
-    def __make_fingerprint(self):
-        open_key = self.ecdsa.get_pub_key()
+    def make_fingerprint(self, open_key):
         self.fingerprint = sha256(open_key)
+
+    def get_shared_key_ecdh(self, remote_pub_key):
+        return self.ecdh.get_shared_key(remote_pub_key)
+
+    def aes_encode(self, key, message):
+        return AES(key).encode(message)
+
+    def encrypt_message(self, message, remote_pub_key):
+        sharedsecret = self.get_shared_key_ecdh(remote_pub_key)
+        return self.aes_encode(sharedsecret, message)
 
     def sign_message(self, message):
         return self.ecdsa.sign(message) + self.ecdsa.get_pub_key()

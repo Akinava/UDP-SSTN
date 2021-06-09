@@ -14,4 +14,4 @@ docker run -it udp_sstn:v0
 docker start -i test_udp_sstn
 
 # run server local
-python3 src/server.py -c docker/config.json -s docker/shadow
+python3 src/server_host.py -c docker/config.json -s docker/shadow
