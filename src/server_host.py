@@ -10,12 +10,12 @@ __version__ = [0, 0]
 import asyncio
 import settings
 from settings import logger
-import host
+from host import Host
 from server_handler import ServerHandler
 from server_protocol import PROTOCOL
 
 
-class Server(host.Host):
+class Server(Host):
     async def run(self):
         logger.info('')
         self.listener = await self.create_endpoint(settings.local_host, settings.default_port)
