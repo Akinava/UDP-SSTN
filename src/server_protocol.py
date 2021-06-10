@@ -30,8 +30,8 @@ PROTOCOL = {
                 {'name': 'protocol_version', 'length': 1, 'type': 'int'},
                 {'name': ('encrypted_request_marker', 'package_id_marker'), 'length': 1},
                 {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
-                {'name': 'my_fingerprint', 'length': Tools.fingerprint_length},
-                {'name': 'connection_open_key', 'length': Tools.pub_key_length},
+                {'name': 'my_fingerprint', 'length': CryptTools.fingerprint_length},
+                {'name': 'connection_open_key', 'length': CryptTools.pub_key_length},
             ]
         },
         {
@@ -39,11 +39,11 @@ PROTOCOL = {
             'package_id_marker': 2,
             'structure': [
                 {'name': 'package_id_marker', 'length': 1},
-                {'name': 'neighbour_open_key', 'length': Tools.pub_key_length},
+                {'name': 'neighbour_open_key', 'length': CryptTools.pub_key_length},
                 {'name': 'neighbour_addr', 'length': 4 + 2},
                 {'name': 'disconnect_flag', 'length': 1, 'type': 'bool'},
                 {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
-                {'name': 'receiver_fingerprint', 'length': Tools.fingerprint_length},
+                {'name': 'receiver_fingerprint', 'length': CryptTools.fingerprint_length},
             ]
         }
     ],

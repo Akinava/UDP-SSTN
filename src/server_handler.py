@@ -7,10 +7,11 @@ __version__ = [0, 0]
 
 
 from time import time
-from package_parser import Parser
+from parser import Parser
+from handler import Handler
 
 
-class ServerHandler(handler.Handler):
+class ServerHandler(Handler):
     def verify_len_swarm_peer_request(self, package_protocol):
         request_length = len(self.connection.get_request())
         required_length = self.parser.calc_requared_length()
