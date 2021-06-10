@@ -25,7 +25,7 @@ PROTOCOL = {
                 'verify_timestamp',
                 'verify_my_fingerprint',
             ],
-            'response': 'swarm_peer_response',
+            'response': 'swarm_peer',
             'structure': [
                 {'name': 'protocol_version', 'length': 1, 'type': 'int'},
                 {'name': ('encrypted_request_marker', 'package_id_marker'), 'length': 1},
@@ -35,7 +35,7 @@ PROTOCOL = {
             ]
         },
         {
-            'name': 'swarm_peer_response',
+            'name': 'swarm_peer',
             'package_id_marker': 2,
             'structure': [
                 {'name': 'package_id_marker', 'length': 1},

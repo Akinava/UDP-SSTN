@@ -31,7 +31,7 @@ class ServerHandler(Handler):
         my_fingerprint_reference = self.crypt_tools.get_fingerprint()
         return my_fingerprint_from_request == my_fingerprint_reference
 
-    def swarm_peer_response(self):
+    def swarm_peer(self):
         logger.info('')
         self.__set_open_key_to_connection()
         self.__set_encrypt_marker_to_connection()
@@ -49,7 +49,7 @@ class ServerHandler(Handler):
 
     def __make_connection_message(self, connection_receiver, connection_neighbour):
         return self.make_message(
-            package_name='swarm_peer_response',
+            package_name='swarm_peer',
             connection_receiver=connection_receiver,
             connection_neighbour=connection_neighbour)
 
