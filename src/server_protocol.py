@@ -48,7 +48,7 @@ PROTOCOL = {
         }
     ],
     'markers': [
-        {'name': 'encrypted_request_marker', 'start bit': 0, 'length': 1, 'type': 'bool'},
+        {'name': 'encrypted_request_marker', 'start bit': 0, 'length': 1, 'type': 'bool_marker'},
         {'name': 'package_id_marker', 'start bit': 1, 'length': 7},
         {'name': 'major_version_marker', 'start bit': 0, 'length': 4},
         {'name': 'minor_version_marker', 'start bit': 4, 'length': 4},

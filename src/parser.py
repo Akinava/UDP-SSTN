@@ -18,6 +18,7 @@ class Parser:
         4: 'I',
         8: 'Q',
     }
+    struct_addr = '>BBBBH'
 
     def __init__(self, protocol):
         self.__protocol = protocol
@@ -56,7 +57,7 @@ class Parser:
     def unpack_timestamp(self, part_data):
         return self.unpack_int(part_data)
 
-    def unpack_bool(self, part_data):
+    def unpack_bool_marker(self, part_data):
         return part_data == 1
 
     def pack_bool(self, part_data):
@@ -76,7 +77,10 @@ class Parser:
 
     def pack_addr(self, addr):
         host, port = addr
-        return struct.pack('>BBBBH', *(map(int, host.split('.'))), port)
+        return struct.pack(self.struct_addr, *(map(int, host.split('.'))), port)
+
+    def get_packed_addr_length(self):
+        return struct.calcsize(self.struct_addr)
 
     def pack_timestemp(self):
         return self.pack_int(int(time.time()), 4)
