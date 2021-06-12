@@ -56,8 +56,8 @@ class Handler:
     def __define_package(self):
         logger.debug('')
         for package_protocol in self.protocol['package']:
-            if self.__define_request(package_protocol):
-                return request_protocol
+            if self.__define_request(package_protocol=package_protocol):
+                return package_protocol
         logger.warn('GeneralProtocol can not define request')
 
     def __define_request(self, package_protocol):

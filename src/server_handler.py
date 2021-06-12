@@ -12,21 +12,22 @@ from handler import Handler
 
 
 class ServerHandler(Handler):
-    def verify_len_swarm_peer_request(self, package_protocol):
+    def verify_len_swarm_peer_request(self, **kwarg):
         request_length = len(self.connection.get_request())
         required_length = self.parser.calc_requared_length()
         return required_length == request_length
 
-    def verify_package_id_marker(self, package_protocol):
+    def verify_package_id_marker(self, **kwarg):
+        package_protocol = kwarg['package_protocol']
         request_id_marker = self.parser.get_part('package_id_marker')
         required_id_marker = package_protocol['package_id_marker']
         return request_id_marker == required_id_marker
 
-    def verify_timestamp(self, package_protocol):
+    def verify_timestamp(self, **kwarg):
         timestamp = self.parser.get_part('timestamp')
         return time() - settings.peer_ping_time_seconds < timestamp < time() + settings.peer_ping_time_seconds
 
-    def verify_package_id_marker(self, package_protocol):
+    def verify_package_id_marker(self, **kwarg):
         my_fingerprint_from_request = self.parser.get_part('my_fingerprint')
         my_fingerprint_reference = self.crypt_tools.get_fingerprint()
         return my_fingerprint_from_request == my_fingerprint_reference

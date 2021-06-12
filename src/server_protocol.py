@@ -10,7 +10,7 @@ from crypt_tools import Tools as CryptTools
 
 
 PROTOCOL = {
-    'protocol version': __version__,
+    'server_protocol_version': __version__,
     'package' : [
         {
             'name': 'swarm_ping',
