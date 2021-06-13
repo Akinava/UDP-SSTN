@@ -7,50 +7,62 @@ __version__ = [0, 0]
 
 
 from crypt_tools import Tools as CryptTools
+from parser import Parser
 
 
 PROTOCOL = {
-    'server_protocol_version': __version__,
-    'package' : [
-        {
+    'client_protocol_version': __version__,
+    'package' : {
+        'swarm_ping': {
             'name': 'swarm_ping',
-            'define': 'define_swarm_ping',
-        },
-        {
+            'define': 'define_swarm_ping'},
+        'swarm_peer_request': {
             'name': 'swarm_peer_request',
             'package_id_marker': 1,
             'define': [
                 'verify_len_swarm_peer_request',
-                'verify_package_id_marker',
-                'verify_timestamp',
-                'verify_my_fingerprint',
-            ],
+                'ctr_verify_ver_id_marker_timestamp_my_fingerprint'],
             'response': 'swarm_peer',
             'structure': [
-                {'name': 'protocol_version', 'length': 1, 'type': 'int'},
-                {'name': ('encrypted_request_marker', 'package_id_marker'), 'length': 1},
-                {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
+                {'name': ('major_version_marker', 'minor_version_marker'), 'length': 1, 'type': 'markers'},
+                {'name': ('encrypted_request_marker', 'package_id_marker'), 'length': 1, 'type': 'markers'},
                 {'name': 'my_fingerprint', 'length': CryptTools.fingerprint_length},
-                {'name': 'connection_open_key', 'length': CryptTools.pub_key_length},
-            ]
-        },
-        {
+                {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
+                {'name': 'requester_open_key', 'length': CryptTools.pub_key_length}]},
+        'swarm_peer': {
             'name': 'swarm_peer',
             'package_id_marker': 2,
+            'define': [
+                'verify_len_swarm_peer',
+                'ctr_verify_ver_id_marker_timestamp_my_fingerprint'],
             'structure': [
-                {'name': 'package_id_marker', 'length': 1},
+                {'name': 'ctr_structure_version_id_marker_my_fingerprint_timestamp', 'type': 'contraction'},
                 {'name': 'neighbour_open_key', 'length': CryptTools.pub_key_length},
-                {'name': 'neighbour_addr', 'length': 4 + 2},
-                {'name': 'disconnect_flag', 'length': 1, 'type': 'bool'},
+                {'name': 'neighbour_addr', 'length': Parser.get_packed_addr_length()},
+                {'name': 'disconnect_flag', 'length': 1, 'type': 'bool'}]},
+    },
+    'markers': {
+        'encrypted_request_marker': {'name': 'encrypted_request_marker', 'start bit': 0, 'length': 1, 'type': 'bool_marker'},
+        'package_id_marker': {'name': 'package_id_marker', 'start bit': 1, 'length': 7, 'type': 'int'},
+        'major_version_marker': {'name': 'major_version_marker', 'start bit': 0, 'length': 4, 'type': 'int'},
+        'minor_version_marker': {'name': 'minor_version_marker', 'start bit': 4, 'length': 4, 'type': 'int'},
+    },
+    'contraction': {
+        'ctr_verify_ver_id_marker_timestamp_my_fingerprint': {
+            'name': 'ctr_verify_ver_id_marker_timestamp_my_fingerprint',
+            'structure': [
+                'verify_protocol_version',
+                'verify_package_id_marker',
+                'verify_timestamp',
+                'verify_my_fingerprint']},
+        'ctr_structure_version_id_marker_my_fingerprint_timestamp': {
+            'name': 'ctr_structure_version_id_marker_my_fingerprint_timestamp',
+            'structure': [
+                {'name': ('major_version_marker', 'minor_version_marker'), 'length': 1, 'type': 'markers'},
+                {'name': 'package_id_marker', 'length': 1},
+                {'name': 'my_fingerprint', 'length': CryptTools.fingerprint_length},
                 {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
-                {'name': 'receiver_fingerprint', 'length': CryptTools.fingerprint_length},
             ]
         }
-    ],
-    'markers': [
-        {'name': 'encrypted_request_marker', 'start bit': 0, 'length': 1, 'type': 'bool_marker'},
-        {'name': 'package_id_marker', 'start bit': 1, 'length': 7},
-        {'name': 'major_version_marker', 'start bit': 0, 'length': 4},
-        {'name': 'minor_version_marker', 'start bit': 4, 'length': 4},
-    ]
+    }
 }

@@ -74,7 +74,7 @@ class ServerHandler(Handler):
         return kwarg['connection_receiver'].get_fingerprint()
 
     def __set_open_key_to_connection(self):
-        connection_open_key = self.parser.get_part('connection_open_key')
+        connection_open_key = self.parser.get_part('requester_open_key')
         self.connection.set_open_key(connection_open_key)
 
     def __set_encrypt_marker_to_connection(self):
