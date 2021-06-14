@@ -7,7 +7,7 @@ __version__ = [0, 0]
 
 
 from crypt_tools import Tools as CryptTools
-from parser import Parser
+from package_parser import Parser
 
 
 PROTOCOL = {

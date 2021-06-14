@@ -9,7 +9,7 @@ __version__ = [0, 0]
 import sys
 from settings import logger
 from crypt_tools import Tools as CryptTools
-from parser import Parser
+from package_parser import Parser
 from connection import Connection, NetPool
 
 
