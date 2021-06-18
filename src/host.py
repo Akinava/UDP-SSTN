@@ -11,6 +11,7 @@ import signal
 import settings
 from settings import logger
 from connection import Connection, NetPool
+from package_parser import Parser
 import utilit
 
 
@@ -18,7 +19,7 @@ class Host:
     def __init__(self, handler, protocol):
         logger.debug('')
         self.__handler = handler
-        self.__protocol = protocol
+        self.__protocol = Parser.recovery_contraction(protocol)
         self.__net_pool = NetPool()
         self.__local_host = settings.local_host
         self.__set_posix_handler()
@@ -55,7 +56,7 @@ class Host:
     def __ping_connections(self):
         for connection in self.__net_pool.get_all_connections():
             if connection.last_response_is_over_ping_time():
-                self.__handler(connection=connection).do_swarm_ping()
+                self.__handler(connection=connection, protocol=self.__protocol).do_swarm_ping()
 
     def __shutdown_connections(self):
         self.__net_pool.shutdown()

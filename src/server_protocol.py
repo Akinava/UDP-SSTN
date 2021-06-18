@@ -12,10 +12,12 @@ from package_parser import Parser
 
 PROTOCOL = {
     'client_protocol_version': __version__,
-    'package' : {
+    'packages': {
         'swarm_ping': {
             'name': 'swarm_ping',
-            'define': 'define_swarm_ping'},
+            'define': 'define_swarm_ping',
+            'structure': [
+                {'name': 'swarm_ping', 'length': 0}]},
         'swarm_peer_request': {
             'name': 'swarm_peer_request',
             'package_id_marker': 1,

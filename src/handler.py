@@ -6,7 +6,6 @@ __license__ = 'MIT License'
 __version__ = [0, 0]
 
 
-import sys
 from settings import logger
 from crypt_tools import Tools as CryptTools
 from package_parser import Parser
@@ -30,7 +29,7 @@ class Handler:
         self.transport = transport
 
     def datagram_received(self, request, remote_addr):
-        logger.info('request %s from %s' % (request, remote_addr))
+        logger.info('request %s from %s' % (request.hex(), remote_addr))
         self.connection = Connection()
         self.connection.datagram_received(request, remote_addr, self.transport)
         self.net_pool.save_connection(self.connection)
@@ -55,8 +54,9 @@ class Handler:
 
     def __define_package(self):
         logger.debug('')
-        for package_protocol in self.protocol['package']:
+        for package_protocol in self.protocol['packages'].values():
             if self.__define_request(package_protocol=package_protocol):
+                logger.debug('package define as {}'.format(package_protocol['name']))
                 return package_protocol
         logger.warn('GeneralProtocol can not define request')
 
@@ -64,20 +64,21 @@ class Handler:
         define_protocol_functions = self.__get_define_protocol_functions(package_protocol)
         for define_func_name in define_protocol_functions:
             define_func = getattr(self, define_func_name)
-            if not define_func(package_protocol) is True:
+            if not define_func(package_protocol=package_protocol) is True:
+                print('use', define_func_name, 'result is False')
                 return False
         return True
 
     def __get_define_protocol_functions(self, package_protocol):
         define_protocol_functions = package_protocol['define']
-        if isintance(define_protocol_functions, list):
+        if isinstance(define_protocol_functions, list):
             return define_protocol_functions
         return [define_protocol_functions]
 
     def __get_response_function(self, request_protocol):
         logger.info('GeneralProtocol response_name {}'.format(request_protocol['name']))
         response_function_name = request_protocol.get('response')
-        if response_function_name in None:
+        if response_function_name is None:
             logger.info('GeneralProtocol no response_function_name')
         logger.info('GeneralProtocol response_function_name {}'.format(response_function_name))
         return getattr(self, response_function_name)
@@ -90,10 +91,10 @@ class Handler:
             message += build_part_messge_function(**kwargs)
         return message
 
-    def define_swarm_ping(self):
+    def define_swarm_ping(self, **kwarg):
         if self.connection.get_request() == b'':
             return True
         return False
 
-    def do_swarm_ping(self):
+    def swarm_ping(self):
         self.connection.send(b'')

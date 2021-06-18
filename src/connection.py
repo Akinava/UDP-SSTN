@@ -158,14 +158,18 @@ class NetPool(Singleton):
         return None
 
     def find_neighbour(self, connection):
+        # FIXME
         self.__clean_groups()
-        connection_groups_index = connection.groups
-        if len(connection_groups_index) != 1:
+        connection_group_indexes = connection.groups
+        # TODO for by group len
+        if len(connection_group_indexes) == 0:
             group = self.get_all_connections()
         else:
-            current_group_index = next(iter(connection_groups_index))
-            required_group_index = next_element_of_ring(current_group_index)
+            current_group_index = next(iter(connection_group_indexes))
+            required_group_index = next_element_of_ring(current_group_index, self.__groups)
             group = self.__groups[required_group_index]
+            # TODO if the group is empty, try to get next group
+        # todo remove from  group connection
         neighbour_connection = self.__find_waiting_connection(group)
         return neighbour_connection
 

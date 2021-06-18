@@ -15,10 +15,17 @@ import get_args
 
 
 class Singleton(object):
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '_instance'):
             cls._instance = super(Singleton, cls).__new__(cls)
+        if hasattr(cls, '_initialized'):
+            cls.__init__ = cls.__skip_init__
+        if not hasattr(cls, '_initialized'):
+            cls._initialized = True
         return cls._instance
+
+    def __skip_init__(self, *args, **kwargs):
+        return
 
 
 class NULL(Singleton):

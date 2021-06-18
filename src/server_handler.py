@@ -5,17 +5,24 @@ __copyright__ = 'Copyright © 2019'
 __license__ = 'MIT License'
 __version__ = [0, 0]
 
-
 from time import time
-from package_parser import Parser
 from handler import Handler
+import settings
+from settings import logger
 
 
 class ServerHandler(Handler):
     def verify_len_swarm_peer_request(self, **kwarg):
         request_length = len(self.connection.get_request())
-        required_length = self.parser.calc_requared_length()
+        required_length = self.parser.calc_requared_length(kwarg['package_protocol'])
         return required_length == request_length
+
+    def verify_protocol_version(self, **kwarg):
+        request_major_version_marker = self.parser.get_part('major_version_marker', kwarg['package_protocol'])
+        request_minor_version_marker = self.parser.get_part('minor_version_marker', kwarg['package_protocol'])
+        my_major_version_marker, my_minor_version_marker = self.protocol['client_protocol_version']
+        return my_major_version_marker >= request_major_version_marker \
+            and my_minor_version_marker >= request_minor_version_marker
 
     def verify_package_id_marker(self, **kwarg):
         package_protocol = kwarg['package_protocol']
@@ -27,7 +34,7 @@ class ServerHandler(Handler):
         timestamp = self.parser.get_part('timestamp')
         return time() - settings.peer_ping_time_seconds < timestamp < time() + settings.peer_ping_time_seconds
 
-    def verify_package_id_marker(self, **kwarg):
+    def verify_my_fingerprint(self, **kwarg):
         my_fingerprint_from_request = self.parser.get_part('my_fingerprint')
         my_fingerprint_reference = self.crypt_tools.get_fingerprint()
         return my_fingerprint_from_request == my_fingerprint_reference
@@ -43,10 +50,10 @@ class ServerHandler(Handler):
         self.__update_connections_state()
 
     def __send_swarm_response(self):
-        receiver_message = self.__make_connection_message(self.connection, self.connection_neighbour)
-        neighbour_message = self.__make_connection_message(self.connection_neighbour, self.connection)
+        receiver_message = self.__make_connection_message(self.connection, self.neighbour_connection)
+        neighbour_message = self.__make_connection_message(self.neighbour_connection, self.connection)
         self.connection.send(self.__handle_encrypt_marker(receiver_message, self.connection))
-        self.connection_neighbour.send(self.__handle_encrypt_marker(neighbour_message, self.connection_neighbou))
+        self.neighbour_connection.send(self.__handle_encrypt_marker(neighbour_message, self.neighbour_connection))
 
     def __make_connection_message(self, connection_receiver, connection_neighbour):
         return self.make_message(
@@ -105,3 +112,7 @@ class ServerHandler(Handler):
         if connection.get_encrypt_marker():
             return self.__encrypt_message(message, connection)
         return self.__sign_message(message)
+
+    def verify_len_swarm_peer(self, **kwarg):
+        # FIXME
+        return False
