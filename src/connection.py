@@ -151,27 +151,29 @@ class NetPool(Singleton):
                 return group
         return None
 
-    def __find_waiting_connection(self, group):
+    def __get_waiting_connection(self, group):
         for connection in group:
             if connection.state == 'waiting':
                 return connection
         return None
 
     def find_neighbour(self, connection):
-        # FIXME
         self.__clean_groups()
-        connection_group_indexes = connection.groups
-        # TODO for by group len
-        if len(connection_group_indexes) == 0:
-            group = self.get_all_connections()
-        else:
-            current_group_index = next(iter(connection_group_indexes))
-            required_group_index = next_element_of_ring(current_group_index, self.__groups)
-            group = self.__groups[required_group_index]
-            # TODO if the group is empty, try to get next group
-        # todo remove from  group connection
-        neighbour_connection = self.__find_waiting_connection(group)
-        return neighbour_connection
+        if len(connection.groups) == 0:
+            return self.__get_waiting_connection(self.get_all_connections())[0]
+        return self.__find_neighbour_in_not_connected_groups(connection)
+
+    def __find_neighbour_in_not_connected_groups(self, connection):
+        for group in self.__groups:
+            if self.__groups.index(group) in connection.groups:
+                continue
+            waiting_group = self.__get_waiting_connection(group)
+            if len(waiting_group) == 0:
+                continue
+            if len(waiting_group) == 1 and connection in waiting_group:
+                continue
+            return waiting_group[0]
+        return None
 
     def save_connection(self, connection):
         connection.state = 'waiting'
