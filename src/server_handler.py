@@ -43,10 +43,14 @@ class ServerHandler(Handler):
         logger.info('')
         self.__set_open_key_to_connection()
         self.__set_encrypt_marker_to_connection()
+
         self.neighbour_connection = self.net_pool.find_neighbour(self.connection)
         if self.neighbour_connection:
+            logger.info('found neighbour {} for peer {}'.format(self.neighbour_connection, self.connection))
             self.__send_swarm_response()
             self.__handle_disconnect()
+        else:
+            logger.info('no neighbours for peer {}'.format(self.connection))
         self.__update_connections_state()
 
     def __send_swarm_response(self):

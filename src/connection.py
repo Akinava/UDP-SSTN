@@ -36,6 +36,9 @@ class Connection:
             return False
         return True
 
+    def __str__(self):
+        return '{}:{}'.format(self.__remote_host, self.__remote_port)
+
     def is_alive(self):
         if self.transport.is_closing():
             return False
@@ -152,29 +155,32 @@ class NetPool(Singleton):
         return None
 
     def __get_waiting_connection_from_group(self, group):
+        waiting_group = []
         for connection in group:
             if connection.state == 'waiting':
-                return connection
-        return None
+                waiting_group.append(connection)
+        return waiting_group
 
     def find_neighbour(self, connection):
         # FIXME
         self.__clean_groups()
-        if len(connection.groups) == 0:
-            return self.__get_waiting_connection_from_group(self.get_all_connections())
-        return self.__find_neighbour_in_not_connected_groups(connection)
-
-    def __find_neighbour_in_not_connected_groups(self, connection):
         for group in self.__groups:
-            if self.__groups.index(group) in connection.groups:
+            if self.__peer_has_connection_to_group(group, connection):
                 continue
-            waiting_group = self.__get_waiting_connection(group)
+            waiting_group = self.__get_waiting_connection_from_group(group)
+            waiting_group = self.__remove_peer_from_group(waiting_group, connection)
             if len(waiting_group) == 0:
-                continue
-            if len(waiting_group) == 1 and connection in waiting_group:
                 continue
             return waiting_group[0]
         return None
+
+    def __remove_peer_from_group(self, group, connection):
+        if connection in group:
+            group.remove(connection)
+        return group
+
+    def __peer_has_connection_to_group(self, group, connection):
+        return self.__groups.index(group) in connection.groups
 
     def save_connection(self, connection):
         connection.state = 'waiting'
@@ -212,6 +218,8 @@ class NetPool(Singleton):
         connection1.groups.add(connection1_group_index)
 
     def update_state(self, connection, state):
+        if connection is None:
+            return
         connection.state = state
 
     def __get_connection_group_index(self, connection):
