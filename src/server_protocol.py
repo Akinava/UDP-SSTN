@@ -23,12 +23,12 @@ PROTOCOL = {
             'package_id_marker': 1,
             'define': [
                 'verify_len_swarm_peer_request',
-                'ctr_verify_ver_id_marker_timestamp_my_fingerprint'],
+                'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint'],
             'response': 'swarm_peer',
             'structure': [
                 {'name': ('major_version_marker', 'minor_version_marker'), 'length': 1, 'type': 'markers'},
                 {'name': ('encrypted_request_marker', 'package_id_marker'), 'length': 1, 'type': 'markers'},
-                {'name': 'my_fingerprint', 'length': CryptTools.fingerprint_length},
+                {'name': 'receiver_fingerprint', 'length': CryptTools.fingerprint_length},
                 {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
                 {'name': 'requester_open_key', 'length': CryptTools.pub_key_length}]},
         'swarm_peer': {
@@ -36,33 +36,33 @@ PROTOCOL = {
             'package_id_marker': 2,
             'define': [
                 'verify_len_swarm_peer',
-                'ctr_verify_ver_id_marker_timestamp_my_fingerprint'],
+                'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint'],
             'structure': [
-                {'name': 'ctr_structure_version_id_marker_my_fingerprint_timestamp', 'type': 'contraction'},
+                {'name': 'ctr_structure_version_id_marker_receiver_fingerprint_timestamp', 'type': 'contraction'},
                 {'name': 'neighbour_open_key', 'length': CryptTools.pub_key_length},
                 {'name': 'neighbour_addr', 'length': Parser.get_packed_addr_length()},
                 {'name': 'disconnect_flag', 'length': 1, 'type': 'bool'}]},
     },
     'markers': {
-        'encrypted_request_marker': {'name': 'encrypted_request_marker', 'start bit': 0, 'length': 1, 'type': 'bool_marker'},
-        'package_id_marker': {'name': 'package_id_marker', 'start bit': 1, 'length': 7, 'type': 'int'},
-        'major_version_marker': {'name': 'major_version_marker', 'start bit': 0, 'length': 4, 'type': 'int'},
-        'minor_version_marker': {'name': 'minor_version_marker', 'start bit': 4, 'length': 4, 'type': 'int'},
+        'encrypted_request_marker': {'name': 'encrypted_request_marker', 'start_bit': 0, 'length': 1, 'type': 'bool_marker'},
+        'package_id_marker': {'name': 'package_id_marker', 'start_bit': 1, 'length': 7, 'type': 'int'},
+        'major_version_marker': {'name': 'major_version_marker', 'start_bit': 0, 'length': 4, 'type': 'int'},
+        'minor_version_marker': {'name': 'minor_version_marker', 'start_bit': 4, 'length': 4, 'type': 'int'},
     },
     'contraction': {
-        'ctr_verify_ver_id_marker_timestamp_my_fingerprint': {
-            'name': 'ctr_verify_ver_id_marker_timestamp_my_fingerprint',
+        'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint': {
+            'name': 'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint',
             'structure': [
                 'verify_protocol_version',
                 'verify_package_id_marker',
                 'verify_timestamp',
-                'verify_my_fingerprint']},
-        'ctr_structure_version_id_marker_my_fingerprint_timestamp': {
-            'name': 'ctr_structure_version_id_marker_my_fingerprint_timestamp',
+                'verify_receiver_fingerprint']},
+        'ctr_structure_version_id_marker_receiver_fingerprint_timestamp': {
+            'name': 'ctr_structure_version_id_marker_receiver_fingerprint_timestamp',
             'structure': [
                 {'name': ('major_version_marker', 'minor_version_marker'), 'length': 1, 'type': 'markers'},
                 {'name': 'package_id_marker', 'length': 1},
-                {'name': 'my_fingerprint', 'length': CryptTools.fingerprint_length},
+                {'name': 'receiver_fingerprint', 'length': CryptTools.fingerprint_length},
                 {'name': 'timestamp', 'length': 4, 'type': 'timestamp'},
             ]
         }

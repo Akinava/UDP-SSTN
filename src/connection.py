@@ -8,7 +8,7 @@ __version__ = [0, 0]
 
 from time import time
 import itertools
-from utilit import Singleton, next_element_of_ring
+from utilit import Singleton
 import settings
 from settings import logger
 from crypt_tools import Tools as CryptTools
@@ -151,16 +151,17 @@ class NetPool(Singleton):
                 return group
         return None
 
-    def __get_waiting_connection(self, group):
+    def __get_waiting_connection_from_group(self, group):
         for connection in group:
             if connection.state == 'waiting':
                 return connection
         return None
 
     def find_neighbour(self, connection):
+        # FIXME
         self.__clean_groups()
         if len(connection.groups) == 0:
-            return self.__get_waiting_connection(self.get_all_connections())[0]
+            return self.__get_waiting_connection_from_group(self.get_all_connections())
         return self.__find_neighbour_in_not_connected_groups(connection)
 
     def __find_neighbour_in_not_connected_groups(self, connection):

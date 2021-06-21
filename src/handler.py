@@ -56,7 +56,6 @@ class Handler:
         logger.debug('')
         for package_protocol in self.protocol['packages'].values():
             if self.__define_request(package_protocol=package_protocol):
-                logger.debug('package define as {}'.format(package_protocol['name']))
                 return package_protocol
         logger.warn('GeneralProtocol can not define request')
 
@@ -65,7 +64,6 @@ class Handler:
         for define_func_name in define_protocol_functions:
             define_func = getattr(self, define_func_name)
             if not define_func(package_protocol=package_protocol) is True:
-                print('use', define_func_name, 'result is False')
                 return False
         return True
 
@@ -76,7 +74,7 @@ class Handler:
         return [define_protocol_functions]
 
     def __get_response_function(self, request_protocol):
-        logger.info('GeneralProtocol response_name {}'.format(request_protocol['name']))
+        logger.info('GeneralProtocol package define as {}'.format(request_protocol['name']))
         response_function_name = request_protocol.get('response')
         if response_function_name is None:
             logger.info('GeneralProtocol no response_function_name')
@@ -85,10 +83,14 @@ class Handler:
 
     def make_message(self, **kwargs):
         message = b''
-        package_structure = self.parser.find_protocol_package(kwargs['package_name'])['structure']
+        package_structure = self.protocol['packages'][kwargs['package_name']]['structure']
         for part_structure in package_structure:
-            build_part_messge_function = getattr(self, 'get_{}'.format(part_structure['name']))
-            message += build_part_messge_function(**kwargs)
+            if part_structure.get('type') == 'markers':
+                build_part_message_function = self.get_markers
+                kwargs['markers'] = part_structure
+            else:
+                build_part_message_function = getattr(self, 'get_{}'.format(part_structure['name']))
+            message += build_part_message_function(**kwargs)
         return message
 
     def define_swarm_ping(self, **kwarg):

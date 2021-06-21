@@ -12,30 +12,30 @@ from settings import logger
 
 
 class ServerHandler(Handler):
-    def verify_len_swarm_peer_request(self, **kwarg):
+    def verify_len_swarm_peer_request(self, **kwargs):
         request_length = len(self.connection.get_request())
-        required_length = self.parser.calc_requared_length(kwarg['package_protocol'])
+        required_length = self.parser.calc_requared_length(kwargs['package_protocol'])
         return required_length == request_length
 
-    def verify_protocol_version(self, **kwarg):
-        request_major_version_marker = self.parser.get_part('major_version_marker', kwarg['package_protocol'])
-        request_minor_version_marker = self.parser.get_part('minor_version_marker', kwarg['package_protocol'])
+    def verify_protocol_version(self, **kwargs):
+        request_major_version_marker = self.parser.get_part('major_version_marker', kwargs['package_protocol'])
+        request_minor_version_marker = self.parser.get_part('minor_version_marker', kwargs['package_protocol'])
         my_major_version_marker, my_minor_version_marker = self.protocol['client_protocol_version']
         return my_major_version_marker >= request_major_version_marker \
             and my_minor_version_marker >= request_minor_version_marker
 
-    def verify_package_id_marker(self, **kwarg):
-        package_protocol = kwarg['package_protocol']
+    def verify_package_id_marker(self, **kwargs):
+        package_protocol = kwargs['package_protocol']
         request_id_marker = self.parser.get_part('package_id_marker')
         required_id_marker = package_protocol['package_id_marker']
         return request_id_marker == required_id_marker
 
-    def verify_timestamp(self, **kwarg):
+    def verify_timestamp(self, **kwargs):
         timestamp = self.parser.get_part('timestamp')
         return time() - settings.peer_ping_time_seconds < timestamp < time() + settings.peer_ping_time_seconds
 
-    def verify_my_fingerprint(self, **kwarg):
-        my_fingerprint_from_request = self.parser.get_part('my_fingerprint')
+    def verify_receiver_fingerprint(self, **kwargs):
+        my_fingerprint_from_request = self.parser.get_part('receiver_fingerprint')
         my_fingerprint_reference = self.crypt_tools.get_fingerprint()
         return my_fingerprint_from_request == my_fingerprint_reference
 
@@ -55,30 +55,50 @@ class ServerHandler(Handler):
         self.connection.send(self.__handle_encrypt_marker(receiver_message, self.connection))
         self.neighbour_connection.send(self.__handle_encrypt_marker(neighbour_message, self.neighbour_connection))
 
-    def __make_connection_message(self, connection_receiver, connection_neighbour):
+    def __make_connection_message(self, receiver_connection, neighbour_connection):
         return self.make_message(
             package_name='swarm_peer',
-            connection_receiver=connection_receiver,
-            connection_neighbour=connection_neighbour)
+            receiver_connection=receiver_connection,
+            neighbour_connection=neighbour_connection)
 
-    def get_package_id_marker(self, **kwarg):
+    def get_package_id_marker(self, **kwargs):
         marker = self.parser.find_protocol_package(kwargs['package_name'])['package_id_marker']
         return self.parser.pack_int(marker, 1)
 
-    def get_neighbour_open_key(self, **kwarg):
-        return kwarg['connection_neighbour'].get_open_key()
+    def get_neighbour_open_key(self, **kwargs):
+        return kwargs['connection_neighbour'].get_open_key()
 
-    def get_neighbour_addr(self, **kwarg):
-        return self.parser.pack_addr(kwarg['connection_neighbour'].get_remote_addr())
+    def get_neighbour_addr(self, **kwargs):
+        return self.parser.pack_addr(kwargs['connection_neighbour'].get_remote_addr())
 
-    def get_disconnect_flag(self, **kwarg):
-        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwarg['connection_receiver']))
+    def get_disconnect_flag(self, **kwargs):
+        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['connection_receiver']))
 
-    def get_timestamp(self, **kwarg):
+    def get_timestamp(self, **kwargs):
         return self.parser.pack_timestemp()
 
-    def get_receiver_fingerprint(self, **kwarg):
-        return kwarg['connection_receiver'].get_fingerprint()
+    def get_receiver_fingerprint(self, **kwargs):
+        return kwargs['receiver_connection'].get_fingerprint()
+
+    def get_markers(self, **kwargs):
+        markers = 0
+        for marker_name in kwargs['markers']['name']:
+            get_marker_value_function = getattr(self, '_get_marker_{}'.format(marker_name))
+            marker = get_marker_value_function(**kwargs)
+            marker_description = self.protocol['markers'][marker_name]
+            markers ^= self.build_marker(marker, marker_description, kwargs['markers'])
+        return self.parser.pack_int(markers, kwargs['markers']['length'])
+
+    def build_marker(self, marker, marker_description, part_structure):
+        part_structure_length_bits = part_structure['length'] * 8
+        left_shift = part_structure_length_bits - marker_description['start_bit'] - marker_description['length']
+        return marker << left_shift
+
+    def _get_marker_major_version_marker(self, **kwargs):
+        return self.protocol['client_protocol_version'][0]
+
+    def _get_marker_minor_version_marker(self, **kwargs):
+        return self.protocol['client_protocol_version'][1]
 
     def __set_open_key_to_connection(self):
         connection_open_key = self.parser.get_part('requester_open_key')
@@ -113,6 +133,6 @@ class ServerHandler(Handler):
             return self.__encrypt_message(message, connection)
         return self.__sign_message(message)
 
-    def verify_len_swarm_peer(self, **kwarg):
+    def verify_len_swarm_peer(self, **kwargs):
         # FIXME
         return False

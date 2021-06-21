@@ -85,7 +85,6 @@ class Tools(Singleton):
         )
 
     def get_fingerprint(self):
-        logger.debug('')
         if not hasattr(self, 'fingerprint'):
             self.make_fingerprint(self.ecdsa.get_pub_key())
         return self.fingerprint

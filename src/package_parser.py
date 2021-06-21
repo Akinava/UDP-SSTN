@@ -29,10 +29,10 @@ class Parser:
         self.package_protocol = package_protocol
 
     def find_protocol_package(self, package_name):
-        for package_protocol in self.__protocol:
-            if package_protocol['name'] == package_name:
-                return package_protocol
-        raise Exception('Error: no protocol with the name {}'.format(package_name))
+        protocol_package = self.__protocol['packages'].get(package_name)
+        if protocol_package is None:
+            raise Exception('Error: no protocol with the name {}'.format(package_name))
+        return protocol_package
 
     def set_connection(self, connection):
         self.connection = connection
@@ -153,11 +153,11 @@ class Parser:
     def __split_markers(self, marker_structure, markers_data):
         markers_data_length = len(markers_data)
         marker_mask = self.__make_mask(
-            marker_structure['start bit'],
+            marker_structure['start_bit'],
             marker_structure['length'],
             markers_data_length)
         left_shift = self.__get_left_shift(
-            marker_structure['start bit'],
+            marker_structure['start_bit'],
             marker_structure['length'],
             markers_data_length)
         marker_packed_int = self.unpack_int(markers_data)
