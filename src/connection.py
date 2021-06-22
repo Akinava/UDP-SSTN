@@ -26,8 +26,12 @@ class Connection:
             self.__set_remote_port(remote_port)
         if transport:
             self.__set_transport(transport)
-        self.__set_last_response()
         self.__set_last_request()
+        self.__init_groups()
+
+    def __init_groups(self):
+        if not hasattr(self, 'groups'):
+            self.groups = set()
 
     def __eq__(self, connection):
         if self.__remote_host != connection.__remote_host:
@@ -140,7 +144,7 @@ class NetPool(Singleton):
             alive_group_tmp = []
             for connection in self.__groups[group_index]:
                 if connection.last_request_is_time_out():
-                    connection.shutdown()
+                    logger.debug('host {} disconnected bt timeout'.format(connection))
                     continue
                 alive_group_tmp.append(connection)
             self.__groups[group_index] = alive_group_tmp
@@ -162,7 +166,6 @@ class NetPool(Singleton):
         return waiting_group
 
     def find_neighbour(self, connection):
-        # FIXME
         self.__clean_groups()
         for group in self.__groups:
             if self.__peer_has_connection_to_group(group, connection):
@@ -183,20 +186,21 @@ class NetPool(Singleton):
         return self.__groups.index(group) in connection.groups
 
     def save_connection(self, connection):
-        connection.state = 'waiting'
+        self.update_state(connection, 'waiting')
         if not self.__get_connection_group(connection) is None:
             self.__update_connection(connection)
-            self.update_state(connection, 'waiting')
             return
         self.__put_connection_in_group(connection)
 
     def __put_connection_in_group(self, connection):
-        connection.state = 'waiting'
-        connection.groups = set()
-        groups_size_list = list(map(len, self.__groups))
-        min_size = min(groups_size_list)
-        min_group_index = groups_size_list.index(min_size)
-        self.__groups[min_group_index].append(connection)
+        def find_small_group():
+            groups_size_list = list(map(len, self.__groups))
+            min_size = min(groups_size_list)
+            min_group_index = groups_size_list.index(min_size)
+            return self.__groups[min_group_index]
+
+        group = find_small_group()
+        group.append(connection)
 
     def __update_connection(self, new_connection):
         group = self.__join_groups()
