@@ -88,6 +88,7 @@ class Connection:
 
     def update_request(self, connection):
         self.__request = connection.get_request()
+        self.__set_time_received_message()
 
     def set_open_key(self, open_key):
         self.open_key = open_key
@@ -122,7 +123,6 @@ class Connection:
         return self.__encrypt_marker
 
     def send(self, response):
-        logger.info('')
         self.__set_time_sent_message()
         self.transport.sendto(response, (self.__remote_host, self.__remote_port))
 

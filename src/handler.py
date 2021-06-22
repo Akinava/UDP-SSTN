@@ -48,6 +48,8 @@ class Handler:
             return
         self.parser.set_package_protocol(package_protocol)
         response_function = self.__get_response_function(package_protocol)
+        if response_function is None:
+            return
         return response_function()
 
     def __define_package(self):
@@ -58,14 +60,14 @@ class Handler:
         logger.warn('GeneralProtocol can not define request')
 
     def __define_request(self, package_protocol):
-        define_protocol_functions = self.__get_define_protocol_functions(package_protocol)
+        define_protocol_functions = self.__get_functions_for_define_protocol(package_protocol)
         for define_func_name in define_protocol_functions:
             define_func = getattr(self, define_func_name)
             if not define_func(package_protocol=package_protocol) is True:
                 return False
         return True
 
-    def __get_define_protocol_functions(self, package_protocol):
+    def __get_functions_for_define_protocol(self, package_protocol):
         define_protocol_functions = package_protocol['define']
         if isinstance(define_protocol_functions, list):
             return define_protocol_functions
@@ -75,6 +77,7 @@ class Handler:
         response_function_name = request_protocol.get('response')
         if response_function_name is None:
             logger.info('GeneralProtocol no response_function_name')
+            return
         logger.info('GeneralProtocol response_function_name {}'.format(response_function_name))
         return getattr(self, response_function_name)
 
@@ -91,10 +94,10 @@ class Handler:
             message += build_part_message_function(**kwargs)
         return message
 
-    def define_swarm_ping(self, **kwarg):
-        if self.connection.get_request() == b'':
-            return True
-        return False
+    def define_swarm_ping(self, **kwargs):
+        request_length = len(self.connection.get_request())
+        required_length = self.parser.calc_requared_length(kwargs['package_protocol'])
+        return required_length == request_length
 
     def swarm_ping(self):
-        self.connection.send(b'')
+        self.connection.send(self.parser.pack_timestemp())

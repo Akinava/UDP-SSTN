@@ -48,7 +48,7 @@ class Host:
         return connection
 
     async def ping(self):
-        logger.debug('')
+        logger.info('')
         while self.listener.is_alive():
             self.__ping_connections()
             await asyncio.sleep(settings.peer_ping_time_seconds)

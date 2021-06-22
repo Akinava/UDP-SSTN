@@ -37,7 +37,7 @@ class Parser:
     def set_connection(self, connection):
         self.connection = connection
 
-    def unpack(self):
+    def unpack_package(self):
         package = {}
         data = self.connection.get_request()
         package_structure = self.package_protocol['structure']
@@ -70,7 +70,7 @@ class Parser:
 
     def get_part(self, name, package_protocol=None):
         self.set_package_protocol(package_protocol)
-        return self.unpack().get(name, NULL())
+        return self.unpack_package().get(name, NULL())
 
     def calc_requared_length(self, package_protocol):
         length = 0
