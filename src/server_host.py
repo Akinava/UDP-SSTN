@@ -19,7 +19,7 @@ class Server(Host):
     async def run(self):
         logger.info('')
         self.listener = await self.create_endpoint(settings.local_host, settings.default_port)
-        await self.serve_forever()
+        await self.ping()
 
 
 if __name__ == '__main__':

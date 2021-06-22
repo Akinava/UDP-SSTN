@@ -47,7 +47,7 @@ class Host:
         )
         return connection
 
-    async def serve_forever(self):
+    async def ping(self):
         logger.debug('')
         while self.listener.is_alive():
             self.__ping_connections()
@@ -55,7 +55,8 @@ class Host:
 
     def __ping_connections(self):
         for connection in self.__net_pool.get_all_connections():
-            if connection.last_response_is_over_ping_time():
+            if connection.last_sent_message_is_over_ping_time():
+                logger.debug('send ping to {}'.format(connection))
                 self.__handler(connection=connection, protocol=self.__protocol).swarm_ping()
 
     def __shutdown_connections(self):

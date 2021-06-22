@@ -26,7 +26,7 @@ class Connection:
             self.__set_remote_port(remote_port)
         if transport:
             self.__set_transport(transport)
-        self.__set_last_request()
+        self.__set_time_received_message()
         self.__init_groups()
 
     def __init_groups(self):
@@ -48,17 +48,19 @@ class Connection:
             return False
         return True
 
-    def last_request_is_time_out(self):
-        return time() - self.__last_request > settings.peer_timeout_seconds
+    def last_received_message_is_over_time_out(self):
+        return time() - self.__received_message_time > settings.peer_timeout_seconds
 
-    def last_response_is_over_ping_time(self):
-        return time() - self.__last_response > settings.peer_ping_time_seconds
+    def last_sent_message_is_over_ping_time(self):
+        if not hasattr(self, '__sent_message_time'):
+            return True
+        return time() - self.__sent_message_time > settings.peer_ping_time_seconds
 
-    def __set_last_response(self):
-        self.__last_response = time()
+    def __set_time_sent_message(self):
+        self.__sent_message_time = time()
 
-    def __set_last_request(self):
-        self.__last_request = time()
+    def __set_time_received_message(self):
+        self.__received_message_time = time()
 
     def __set_transport(self, transport):
         self.transport = transport
@@ -121,7 +123,7 @@ class Connection:
 
     def send(self, response):
         logger.info('')
-        self.__set_last_response()
+        self.__set_time_sent_message()
         self.transport.sendto(response, (self.__remote_host, self.__remote_port))
 
     def shutdown(self):
@@ -143,7 +145,7 @@ class NetPool(Singleton):
         for group_index in range(len(self.__groups)):
             alive_group_tmp = []
             for connection in self.__groups[group_index]:
-                if connection.last_request_is_time_out():
+                if connection.last_received_message_is_over_time_out():
                     logger.debug('host {} disconnected bt timeout'.format(connection))
                     continue
                 alive_group_tmp.append(connection)
