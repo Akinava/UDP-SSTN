@@ -86,14 +86,14 @@ class Tools(Singleton):
 
     def get_fingerprint(self):
         if not hasattr(self, 'fingerprint'):
-            self.make_fingerprint(self.ecdsa.get_pub_key())
+            self.fingerprint = self.make_fingerprint(self.ecdsa.get_pub_key())
         return self.fingerprint
 
     def get_fingerprint_len(self):
         return self.fingerprint_length
 
     def make_fingerprint(self, open_key):
-        self.fingerprint = sha256(open_key)
+        return sha256(open_key)
 
     def get_shared_key_ecdh(self, remote_pub_key):
         return self.ecdh.get_shared_key(remote_pub_key)

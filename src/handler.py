@@ -90,6 +90,7 @@ class Handler:
                 kwargs['markers'] = part_structure
             else:
                 build_part_message_function = getattr(self, 'get_{}'.format(part_structure['name']))
+
             logger.debug('build part {}'.format(part_structure['name']))
             message += build_part_message_function(**kwargs)
         return message

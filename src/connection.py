@@ -161,27 +161,23 @@ class NetPool(Singleton):
         return None
 
     def __get_waiting_connection_from_group(self, group):
-        waiting_group = []
         for connection in group:
             if connection.state == 'waiting':
-                waiting_group.append(connection)
-        return waiting_group
+                return connection
 
     def find_neighbour(self, connection):
         self.__clean_groups()
         for group in self.__groups:
             if self.__peer_has_connection_to_group(group, connection):
                 continue
-            waiting_group = self.__get_waiting_connection_from_group(group)
-            waiting_group = self.__remove_peer_from_group(waiting_group, connection)
-            if len(waiting_group) == 0:
-                continue
-            return waiting_group[0]
-        return None
+            waiting_group = self.__remove_peer_from_group(group, connection)
+            waiting_connection = self.__get_waiting_connection_from_group(waiting_group)
+            return waiting_connection
 
     def __remove_peer_from_group(self, group, connection):
         if connection in group:
-            group.remove(connection)
+            connection_index = group.index(connection)
+            return group[: connection_index] + group[connection_index+1:]
         return group
 
     def __peer_has_connection_to_group(self, group, connection):

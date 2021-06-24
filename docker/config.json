@@ -1,6 +1,6 @@
 {
   "peer_timeout_seconds": 60,
-  "peer_ping_time_seconds": 5,
+  "peer_ping_time_seconds": 15,
   "peer_connections": 10,
   "peer_groups": 3,
   "shadow_file": "shadow",

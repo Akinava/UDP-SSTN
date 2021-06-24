@@ -43,7 +43,6 @@ class ServerHandler(Handler):
         logger.info('')
         self.__set_open_key_to_connection()
         self.__set_encrypt_marker_to_connection()
-
         self.neighbour_connection = self.net_pool.find_neighbour(self.connection)
         if self.neighbour_connection:
             logger.info('found neighbour {} for peer {}'.format(self.neighbour_connection, self.connection))
@@ -70,13 +69,13 @@ class ServerHandler(Handler):
         return self.parser.pack_int(marker, 1)
 
     def get_neighbour_open_key(self, **kwargs):
-        return kwargs['connection_neighbour'].get_open_key()
+        return kwargs['neighbour_connection'].get_open_key()
 
     def get_neighbour_addr(self, **kwargs):
-        return self.parser.pack_addr(kwargs['connection_neighbour'].get_remote_addr())
+        return self.parser.pack_addr(kwargs['neighbour_connection'].get_remote_addr())
 
     def get_disconnect_flag(self, **kwargs):
-        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['connection_receiver']))
+        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiver_connection']))
 
     def get_timestamp(self, **kwargs):
         return self.parser.pack_timestemp()
@@ -91,7 +90,9 @@ class ServerHandler(Handler):
             marker = get_marker_value_function(**kwargs)
             marker_description = self.protocol['markers'][marker_name]
             markers ^= self.build_marker(marker, marker_description, kwargs['markers'])
-        return self.parser.pack_int(markers, kwargs['markers']['length'])
+        packed_markers = self.parser.pack_int(markers, kwargs['markers']['length'])
+        del kwargs['markers']
+        return packed_markers
 
     def build_marker(self, marker, marker_description, part_structure):
         part_structure_length_bits = part_structure['length'] * 8
@@ -113,7 +114,7 @@ class ServerHandler(Handler):
         self.connection.set_encrypt_marker(encrypt_marker)
 
     def __update_connections_state(self):
-        stat = 'wait' if self.neighbour_connection is None else 'in_progress'
+        stat = 'waiting' if self.neighbour_connection is None else 'in_progress'
         self.__save_neighbour_connection_param(stat)
 
     def __handle_disconnect(self, *connections):
@@ -130,7 +131,7 @@ class ServerHandler(Handler):
         return self.crypt_tools.sign_message(message)
 
     def __encrypt_message(self, message, connection):
-        return self.crypt_tools.sign_message(message, connection.get_open_key())
+        return self.crypt_tools.encrypt_message(message, connection.get_open_key())
 
     def __handle_encrypt_marker(self, message, connection):
         if connection.get_encrypt_marker():
