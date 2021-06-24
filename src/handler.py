@@ -43,7 +43,6 @@ class Handler:
         logger.debug('')
         # TODO make a tread
         package_protocol = self.__define_package()
-        logger.info('GeneralProtocol package define as {}'.format(package_protocol['name']))
         if package_protocol is None:
             return
         self.parser.set_package_protocol(package_protocol)
@@ -56,6 +55,7 @@ class Handler:
         logger.debug('')
         for package_protocol in self.protocol['packages'].values():
             if self.__define_request(package_protocol=package_protocol):
+                logger.info('GeneralProtocol package define as {}'.format(package_protocol['name']))
                 return package_protocol
         logger.warn('GeneralProtocol can not define request')
 
