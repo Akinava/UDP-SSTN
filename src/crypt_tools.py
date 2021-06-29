@@ -28,10 +28,10 @@ class Tools(Singleton):
 
     def __init_ecdsa(self):
         logger.debug('')
-        if self.__get_ecdsa_from_file():
-            return
-        self.__generate_new_ecdsa()
-        self.__save_ecdsa()
+        if not self.__get_ecdsa_from_file():
+            self.__generate_new_ecdsa()
+            self.__save_ecdsa()
+        self.fingerprint = self.make_fingerprint(self.ecdsa.get_pub_key())
 
     def __read_shadow_file(self):
         logger.info(settings.shadow_file)
@@ -77,16 +77,15 @@ class Tools(Singleton):
         logger.debug('')
         ecdsa_priv_key = self.ecdsa.get_priv_key()
         ecdsa_priv_key_b58 = B58().pack(ecdsa_priv_key)
+        ecdsa_pub_key = self.ecdsa.get_pub_key()
+        ecdsa_pub_key_b58 = B58().pack(ecdsa_pub_key)
         fingerprint_b58 = B58().pack(self.get_fingerprint())
         self.__update_shadow_file(
             {'ecdsa': {
                 'key': ecdsa_priv_key_b58,
-                'fingerprint': fingerprint_b58}}
-        )
+                'pub_key': ecdsa_pub_key_b58}})
 
     def get_fingerprint(self):
-        if not hasattr(self, 'fingerprint'):
-            self.fingerprint = self.make_fingerprint(self.ecdsa.get_pub_key())
         return self.fingerprint
 
     def get_fingerprint_len(self):
@@ -106,4 +105,4 @@ class Tools(Singleton):
         return self.aes_encode(sharedsecret, message)
 
     def sign_message(self, message):
-        return self.ecdsa.sign(message) + self.ecdsa.get_pub_key()
+        return self.ecdsa.sign(message)

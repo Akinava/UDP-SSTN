@@ -124,6 +124,7 @@ class Connection:
 
     def send(self, response):
         self.__set_time_sent_message()
+        logger.info('%s to %s' % (response.hex(), (self.__remote_host, self.__remote_port)))
         self.transport.sendto(response, (self.__remote_host, self.__remote_port))
 
     def shutdown(self):

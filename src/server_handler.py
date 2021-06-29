@@ -136,8 +136,4 @@ class ServerHandler(Handler):
     def __handle_encrypt_marker(self, message, connection):
         if connection.get_encrypt_marker():
             return self.__encrypt_message(message, connection)
-        return self.__sign_message(message)
-
-    def verify_len_swarm_peer(self, **kwargs):
-        # FIXME
-        return False
+        return message + self.__sign_message(message)

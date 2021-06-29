@@ -16,6 +16,8 @@ PROTOCOL = {
         'swarm_ping': {
             'name': 'swarm_ping',
             'define': 'define_swarm_ping',
+            'encrypted': False,
+            'signed': False,
             'structure': [
                 {'name': 'swarm_ping', 'length': 4}]},
         'swarm_peer_request': {
@@ -24,6 +26,8 @@ PROTOCOL = {
             'define': [
                 'verify_len_swarm_peer_request',
                 'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint'],
+            'encrypted': False,
+            'signed': False,
             'response': 'swarm_peer',
             'structure': [
                 {'name': ('major_version_marker', 'minor_version_marker'), 'length': 1, 'type': 'markers'},
@@ -37,6 +41,8 @@ PROTOCOL = {
             'define': [
                 'verify_len_swarm_peer',
                 'ctr_verify_ver_id_marker_timestamp_receiver_fingerprint'],
+            'encrypted': True,
+            'signed': True,
             'structure': [
                 {'name': 'ctr_structure_version_id_marker_receiver_fingerprint_timestamp', 'type': 'contraction'},
                 {'name': 'neighbour_open_key', 'length': CryptTools.pub_key_length},

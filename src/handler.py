@@ -62,6 +62,9 @@ class Handler:
     def __define_request(self, package_protocol):
         define_protocol_functions = self.__get_functions_for_define_protocol(package_protocol)
         for define_func_name in define_protocol_functions:
+            if not hasattr(self, define_func_name):
+                logger.info('define_func {} is not implemented'.format(define_func_name))
+                return False
             define_func = getattr(self, define_func_name)
             if not define_func(package_protocol=package_protocol) is True:
                 return False
