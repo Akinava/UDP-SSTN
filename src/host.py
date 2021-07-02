@@ -34,22 +34,17 @@ class Host:
         if signum == signal.SIGUSR1:
             self.__config_reload()
 
-    async def create_endpoint(self, local_host, local_port):
-        logger.info('create listener on port {}'.format(local_port))
+    async def create_listener(self, local_addr):
+        logger.info('create listener on port {}'.format(local_addr[1]))
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
             lambda: self.__handler(protocol=self.__protocol),
-            local_addr=(local_host, local_port))
-        connection = Connection(
-            local_host=local_host,
-            local_port=local_port,
-            transport=transport
-        )
-        return connection
+            local_addr=local_addr)
+        return transport
 
     async def ping(self):
         logger.info('')
-        while self.listener.is_alive():
+        while not self.listener.is_closing():
             self.__ping_connections()
             await asyncio.sleep(settings.peer_ping_time_seconds)
 

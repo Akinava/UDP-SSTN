@@ -18,7 +18,9 @@ from server_protocol import PROTOCOL
 class Server(Host):
     async def run(self):
         logger.info('')
-        self.listener = await self.create_endpoint(settings.local_host, settings.default_port)
+        self.listener = await self.create_listener(
+            (settings.local_host,
+             settings.default_port))
         await self.ping()
 
 

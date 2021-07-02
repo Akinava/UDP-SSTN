@@ -41,7 +41,7 @@ class ServerHandler(Handler):
 
     def swarm_peer(self):
         logger.info('')
-        self.__set_open_key_to_connection()
+        self.__set_pub_key_to_connection()
         self.__set_encrypt_marker_to_connection()
         self.neighbour_connection = self.net_pool.find_neighbour(self.connection)
         if self.neighbour_connection:
@@ -69,7 +69,7 @@ class ServerHandler(Handler):
         return self.parser.pack_int(marker, 1)
 
     def get_neighbour_open_key(self, **kwargs):
-        return kwargs['neighbour_connection'].get_open_key()
+        return kwargs['neighbour_connection'].get_pub_key()
 
     def get_neighbour_addr(self, **kwargs):
         return self.parser.pack_addr(kwargs['neighbour_connection'].get_remote_addr())
@@ -105,9 +105,9 @@ class ServerHandler(Handler):
     def _get_marker_minor_version_marker(self, **kwargs):
         return self.protocol['client_protocol_version'][1]
 
-    def __set_open_key_to_connection(self):
+    def __set_pub_key_to_connection(self):
         connection_open_key = self.parser.get_part('requester_open_key')
-        self.connection.set_open_key(connection_open_key)
+        self.connection.set_pub_key(connection_open_key)
 
     def __set_encrypt_marker_to_connection(self):
         encrypt_marker = self.parser.get_part('encrypted_request_marker')
@@ -131,7 +131,7 @@ class ServerHandler(Handler):
         return self.crypt_tools.sign_message(message)
 
     def __encrypt_message(self, message, connection):
-        return self.crypt_tools.encrypt_message(message, connection.get_open_key())
+        return self.crypt_tools.encrypt_message(message, connection.get_pub_key())
 
     def __handle_encrypt_marker(self, message, connection):
         if connection.get_encrypt_marker():

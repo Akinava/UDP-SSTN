@@ -30,9 +30,10 @@ class Handler:
 
     def datagram_received(self, request, remote_addr):
         logger.info('%s from %s' % (request.hex(), remote_addr))
-        self.connection = Connection()
-        self.connection.datagram_received(request, remote_addr, self.transport)
-        self.net_pool.save_connection(self.connection)
+        self.connection = Connection(
+            remote_addr=remote_addr,
+            request=request,
+            transport=self.transport)
         self.parser.set_connection(self.connection)
         self.__handle()
 

@@ -15,3 +15,7 @@ docker start -i test_udp_sstn
 
 # run server local
 python3 src/server_host.py -c docker/config.json -s docker/shadow
+
+# run client local
+python3 test/test_peer.py -p docker/peers.json -c docker/config.json -s docker/shadow
+python3 test/test_peer.py -p docker/peers.json -c tmp/config.json  -s tmp/shadow
