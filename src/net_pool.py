@@ -89,6 +89,7 @@ class NetPool(Singleton):
 
     def __copy_connection_property(self, new_connection, old_connection):
         new_connection.set_pub_key(old_connection.get_pub_key())
+        new_connection.set_encrypt_marker(old_connection.get_encrypt_marker())
         new_connection.groups = old_connection.groups
 
     def get_all_connections(self):

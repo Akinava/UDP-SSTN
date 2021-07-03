@@ -79,7 +79,6 @@ class Tools(Singleton):
         ecdsa_priv_key_b58 = B58().pack(ecdsa_priv_key)
         ecdsa_pub_key = self.ecdsa.get_pub_key()
         ecdsa_pub_key_b58 = B58().pack(ecdsa_pub_key)
-        fingerprint_b58 = B58().pack(self.get_fingerprint())
         self.__update_shadow_file(
             {'ecdsa': {
                 'key': ecdsa_priv_key_b58,
