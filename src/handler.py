@@ -99,10 +99,15 @@ class Handler:
             message += build_part_message_function(**kwargs)
         return message
 
+    def send(self, **kwargs):
+        connection = kwargs.get('connection', self.connection)
+        encrypted_message = self.crypt_tools.encrypt_message(**kwargs)
+        connection.send(encrypted_message)
+
     def define_swarm_ping(self, **kwargs):
         request_length = len(self.connection.get_request())
         required_length = self.parser.calc_requared_length(kwargs['package_protocol'])
         return required_length == request_length
 
-    def swarm_ping(self):
-        self.connection.send(self.parser.pack_timestemp())
+    def swarm_ping(self, **kwargs):
+        self.send(**kwargs, message=self.parser.pack_timestemp())

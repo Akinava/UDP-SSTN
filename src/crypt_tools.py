@@ -105,3 +105,14 @@ class Tools(Singleton):
 
     def sign_message(self, message):
         return self.ecdsa.sign(message)
+
+    def encrypt_message(self, **kwargs):
+        package_protocol = kwargs['package_protocol']
+        connection = kwargs['connection']
+        message = kwargs['message']
+        if package_protocol['encrypted'] is False and package_protocol['signed'] is False:
+            return message
+        if connection.get_encrypt_marker() is True and package_protocol['encrypted'] is True:
+            return self.encrypt_message(message, connection.get_pub_key())
+        if package_protocol['signed'] is True or package_protocol['encrypted'] is True:
+            return self.sign_message(message)
