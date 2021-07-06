@@ -99,11 +99,11 @@ class Tools(Singleton):
     def aes_encode(self, key, message):
         return AES(key).encode(message)
 
-    def encrypt_message(self, message, remote_pub_key):
+    def encrypt(self, message, remote_pub_key):
         sharedsecret = self.get_shared_key_ecdh(remote_pub_key)
         return self.aes_encode(sharedsecret, message)
 
-    def sign_message(self, message):
+    def sign(self, message):
         return self.ecdsa.sign(message)
 
     def encrypt_message(self, **kwargs):
@@ -113,6 +113,6 @@ class Tools(Singleton):
         if package_protocol['encrypted'] is False and package_protocol['signed'] is False:
             return message
         if connection.get_encrypt_marker() is True and package_protocol['encrypted'] is True:
-            return self.encrypt_message(message, connection.get_pub_key())
+            return self.encrypt(message, connection.get_pub_key())
         if package_protocol['signed'] is True or package_protocol['encrypted'] is True:
-            return self.sign_message(message)
+            return self.sign(message)

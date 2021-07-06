@@ -131,7 +131,7 @@ class Parser:
 
         return protocol
 
-    def pack_timestemp(self):
+    def pack_timestamp(self):
         return self.pack_int(int(time.time()), 4)
 
     def unpack_markers(self, **kwargs):

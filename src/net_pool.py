@@ -9,6 +9,7 @@ __version__ = [0, 0]
 import itertools
 import settings
 from utilit import Singleton
+from settings import logger
 
 
 class NetPool(Singleton):
@@ -68,9 +69,9 @@ class NetPool(Singleton):
             self.__update_connection_in_group(connection)
         else:
             self.__put_connection_in_group(connection)
-        return connection
 
     def __put_connection_in_group(self, connection):
+        logger.info('')
         def find_small_group():
             groups_size_list = list(map(len, self.__groups))
             min_size = min(groups_size_list)
@@ -81,6 +82,7 @@ class NetPool(Singleton):
         group.append(connection)
 
     def __update_connection_in_group(self, new_connection):
+        logger.info('')
         group = self.__get_connection_group(new_connection)
         connection_index = group.index(new_connection)
         old_connection = group[connection_index]
@@ -91,6 +93,7 @@ class NetPool(Singleton):
         new_connection.set_pub_key(old_connection.get_pub_key())
         new_connection.set_encrypt_marker(old_connection.get_encrypt_marker())
         new_connection.groups = old_connection.groups
+        new_connection.set_time_sent_message(old_connection.get_time_sent_message())
 
     def get_all_connections(self):
         self.__clean_groups()

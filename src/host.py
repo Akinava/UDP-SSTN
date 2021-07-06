@@ -10,7 +10,7 @@ import asyncio
 import signal
 import settings
 from settings import logger
-from connection import Connection, NetPool
+from connection import NetPool
 from package_parser import Parser
 import utilit
 
@@ -46,7 +46,7 @@ class Host:
         logger.info('')
         while not self.listener.is_closing():
             self.__ping_connections()
-            await asyncio.sleep(settings.peer_ping_time_seconds)
+            await asyncio.sleep(1)
 
     def __ping_connections(self):
         package_protocol = self.__protocol['packages']['swarm_ping']
