@@ -12,7 +12,7 @@ import settings
 from settings import logger
 from host import Host
 from server_handler import ServerHandler
-from server_protocol import PROTOCOL
+from protocol import PROTOCOL
 
 
 class Server(Host):
