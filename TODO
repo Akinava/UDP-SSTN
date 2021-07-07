@@ -1,5 +1,5 @@
-UDP-SSTN
-Swarm Server Traversal for NAT - Server
+HPN Server
+hole punching NAT server
 
 # rebuild and run project in local containers
 docker-compose -f ./docker/docker-compose.yml up --build
