@@ -37,11 +37,7 @@ class ServerHandler(Handler):
             receiver_connection=receiver_connection,
             neighbour_connection=neighbour_connection)
 
-    def get_package_id_marker(self, **kwargs):
-        marker = self.parser.find_protocol_package(kwargs['package_name'])['package_id_marker']
-        return self.parser.pack_int(marker, 1)
-
-    def get_neighbour_open_key(self, **kwargs):
+    def get_neighbour_pub_key(self, **kwargs):
         return kwargs['neighbour_connection'].get_pub_key()
 
     def get_neighbour_addr(self, **kwargs):
@@ -51,8 +47,8 @@ class ServerHandler(Handler):
         return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiver_connection']))
 
     def __set_pub_key_to_connection(self):
-        connection_open_key = self.parser.get_part('requester_open_key')
-        self.connection.set_pub_key(connection_open_key)
+        connection_pub_key = self.parser.get_part('requester_pub_key')
+        self.connection.set_pub_key(connection_pub_key)
 
     def __set_encrypt_marker_to_connection(self):
         encrypt_marker = self.parser.get_part('encrypted_request_marker')
