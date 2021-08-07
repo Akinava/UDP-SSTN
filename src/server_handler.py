@@ -12,16 +12,7 @@ from settings import logger
 
 
 class ServerHandler(Handler):
-    def verify_timestamp(self, **kwargs):
-        timestamp = self.parser.get_part('timestamp')
-        return time() - settings.peer_ping_time_seconds < timestamp < time() + settings.peer_ping_time_seconds
-
-    def verify_receiver_fingerprint(self, **kwargs):
-        my_fingerprint_from_request = self.parser.get_part('receiver_fingerprint')
-        my_fingerprint_reference = self.crypt_tools.get_fingerprint()
-        return my_fingerprint_from_request == my_fingerprint_reference
-
-    def swarm_peer(self):
+    def hpn_neighbour_client(self):
         logger.info('')
         self.__set_pub_key_to_connection()
         self.__set_encrypt_marker_to_connection()
@@ -42,7 +33,7 @@ class ServerHandler(Handler):
 
     def __make_connection_message(self, receiver_connection, neighbour_connection):
         return self.make_message(
-            package_name='swarm_peer',
+            package_name='hpn_neighbour_client',
             receiver_connection=receiver_connection,
             neighbour_connection=neighbour_connection)
 
@@ -58,12 +49,6 @@ class ServerHandler(Handler):
 
     def get_disconnect_flag(self, **kwargs):
         return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiver_connection']))
-
-    def get_timestamp(self, **kwargs):
-        return self.parser.pack_timestamp()
-
-    def get_receiver_fingerprint(self, **kwargs):
-        return kwargs['receiver_connection'].get_fingerprint()
 
     def get_markers(self, **kwargs):
         markers = 0
