@@ -50,28 +50,6 @@ class ServerHandler(Handler):
     def get_disconnect_flag(self, **kwargs):
         return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiver_connection']))
 
-    def get_markers(self, **kwargs):
-        markers = 0
-        for marker_name in kwargs['markers']['name']:
-            get_marker_value_function = getattr(self, '_get_marker_{}'.format(marker_name))
-            marker = get_marker_value_function(**kwargs)
-            marker_description = self.protocol['markers'][marker_name]
-            markers ^= self.build_marker(marker, marker_description, kwargs['markers'])
-        packed_markers = self.parser.pack_int(markers, kwargs['markers']['length'])
-        del kwargs['markers']
-        return packed_markers
-
-    def build_marker(self, marker, marker_description, part_structure):
-        part_structure_length_bits = part_structure['length'] * 8
-        left_shift = part_structure_length_bits - marker_description['start_bit'] - marker_description['length']
-        return marker << left_shift
-
-    def _get_marker_major_version_marker(self, **kwargs):
-        return self.protocol['client_protocol_version'][0]
-
-    def _get_marker_minor_version_marker(self, **kwargs):
-        return self.protocol['client_protocol_version'][1]
-
     def __set_pub_key_to_connection(self):
         connection_open_key = self.parser.get_part('requester_open_key')
         self.connection.set_pub_key(connection_open_key)
