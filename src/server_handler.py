@@ -19,17 +19,21 @@ class ServerHandler(Handler):
         self.neighbour_connection = self.net_pool.find_neighbour(self.connection)
         if self.neighbour_connection:
             logger.info('found neighbour {} for peer {}'.format(self.neighbour_connection, self.connection))
-            self.__send_swarm_response()
+            self.__send_hpn_neighbour_client_response()
             self.__handle_disconnect()
         else:
             logger.info('no neighbours for peer {}'.format(self.connection))
         self.__update_connections_state()
 
-    def __send_swarm_response(self):
+    def __send_hpn_neighbour_client_response(self):
         receiver_message = self.__make_connection_message(self.connection, self.neighbour_connection)
         neighbour_message = self.__make_connection_message(self.neighbour_connection, self.connection)
-        self.connection.send(self.__handle_encrypt_marker(receiver_message, self.connection))
-        self.neighbour_connection.send(self.__handle_encrypt_marker(neighbour_message, self.neighbour_connection))
+        self.send(message=receiver_message,
+                  connection=self.connection,
+                  package_protocol_name='hpn_neighbour_client')
+        self.send(message=neighbour_message,
+                  connection=self.neighbour_connection,
+                  package_protocol_name='hpn_neighbour_client')
 
     def __make_connection_message(self, receiver_connection, neighbour_connection):
         return self.make_message(
@@ -67,14 +71,3 @@ class ServerHandler(Handler):
         self.net_pool.update_neighbour_group(self.connection, self.neighbour_connection)
         self.net_pool.update_state(self.connection, state)
         self.net_pool.update_state(self.neighbour_connection, state)
-
-    def __sign_message(self, message):
-        return self.crypt_tools.sign(message)
-
-    def __encrypt_message(self, message, connection):
-        return self.crypt_tools.encrypt(message, connection.get_pub_key())
-
-    def __handle_encrypt_marker(self, message, connection):
-        if connection.get_encrypt_marker():
-            return self.__encrypt_message(message, connection)
-        return message + self.__sign_message(message)
