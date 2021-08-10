@@ -1,1 +1,1 @@
-UDP Swarm Server Traversal for NAT
+UDP Server Traversal for NAT

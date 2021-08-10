@@ -26,7 +26,7 @@ class NetPool(Singleton):
             alive_group_tmp = []
             for connection in self.__groups[group_index]:
                 if connection.last_received_message_is_over_time_out():
-                    logger.debug('host {} disconnected bt timeout'.format(connection))
+                    logger.debug('host {} disconnected by timeout'.format(connection))
                     continue
                 alive_group_tmp.append(connection)
             self.__groups[group_index] = alive_group_tmp
