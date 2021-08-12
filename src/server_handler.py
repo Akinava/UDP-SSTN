@@ -28,17 +28,18 @@ class ServerHandler(Handler):
     def __send_hpn_neighbour_client_response(self):
         receiver_message = self.__make_connection_message(self.connection, self.neighbour_connection)
         neighbour_message = self.__make_connection_message(self.neighbour_connection, self.connection)
+
         self.send(message=receiver_message,
-                  connection=self.connection,
+                  receiving_connection=self.connection,
                   package_protocol_name='hpn_neighbour_client')
         self.send(message=neighbour_message,
-                  connection=self.neighbour_connection,
+                  receiving_connection=self.neighbour_connection,
                   package_protocol_name='hpn_neighbour_client')
 
-    def __make_connection_message(self, receiver_connection, neighbour_connection):
+    def __make_connection_message(self, receiving_connection, neighbour_connection):
         return self.make_message(
             package_name='hpn_neighbour_client',
-            receiver_connection=receiver_connection,
+            receiving_connection=receiving_connection,
             neighbour_connection=neighbour_connection)
 
     def get_neighbour_pub_key(self, **kwargs):
@@ -48,7 +49,7 @@ class ServerHandler(Handler):
         return self.parser.pack_addr(kwargs['neighbour_connection'].get_remote_addr())
 
     def get_disconnect_flag(self, **kwargs):
-        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiver_connection']))
+        return self.parser.pack_bool(self.net_pool.can_be_disconnected(kwargs['receiving_connection']))
 
     def __set_pub_key_to_connection(self):
         connection_pub_key = self.parser.get_part('requester_pub_key')
