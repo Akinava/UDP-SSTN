@@ -73,6 +73,8 @@ class NetPool(Singleton):
     def __put_connection_in_group(self, connection):
         logger.info('')
         def find_small_group():
+            # FIXME if size of groups the same put connection in group
+            # FIXME which with connection what has more connect and release that "old" connection
             groups_size_list = list(map(len, self.__groups))
             min_size = min(groups_size_list)
             min_group_index = groups_size_list.index(min_size)
