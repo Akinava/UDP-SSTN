@@ -17,7 +17,7 @@ from protocol import PROTOCOL
 
 class Server(Host):
     async def run(self):
-        logger.info('')
+        #logger.info('')
         self.listener = await self.create_listener(
             (settings.local_host,
              settings.default_port))

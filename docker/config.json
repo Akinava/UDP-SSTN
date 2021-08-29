@@ -1,8 +1,8 @@
 {
   "peer_timeout_seconds": 60,
   "peer_ping_time_seconds": 30,
-  "peer_connections": 10,
-  "peer_groups": 3,
+  "peer_connections": 2,
+  "peer_groups": 2,
   "shadow_file": "shadow",
   "default_port": 2003,
   "local_host": "0.0.0.0",

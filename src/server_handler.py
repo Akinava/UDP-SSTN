@@ -13,7 +13,7 @@ from settings import logger
 
 class ServerHandler(Handler):
     def hpn_neighbour_client(self):
-        logger.info('')
+        #logger.info('')
         self.__set_pub_key_to_connection()
         self.__set_encrypt_marker_to_connection()
         self.neighbour_connection = self.net_pool.find_neighbour(self.connection)

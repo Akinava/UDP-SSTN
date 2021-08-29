@@ -71,7 +71,7 @@ class NetPool(Singleton):
             self.__put_connection_in_group(connection)
 
     def __put_connection_in_group(self, connection):
-        logger.info('')
+        #logger.info('')
         def find_small_group():
             # FIXME if size of groups the same put connection in group
             # FIXME which with connection what has more connect and release that "old" connection
@@ -84,7 +84,7 @@ class NetPool(Singleton):
         group.append(connection)
 
     def __update_connection_in_group(self, new_connection):
-        logger.info('')
+        #logger.info('')
         group = self.__get_connection_group(new_connection)
         connection_index = group.index(new_connection)
         old_connection = group[connection_index]
