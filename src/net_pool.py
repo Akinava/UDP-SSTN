@@ -96,8 +96,6 @@ class NetPool(Singleton):
         new_connection.set_encrypt_marker(old_connection.get_encrypt_marker())
         new_connection.groups = old_connection.groups
         new_connection.set_time_sent_message(old_connection.get_time_sent_message())
-        print('>', '__copy_connection_property', old_connection.get_pub_key())
-        print('>', '__copy_connection_property', new_connection.get_pub_key())
 
     def get_all_connections(self):
         self.__clean_groups()

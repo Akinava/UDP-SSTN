@@ -17,9 +17,7 @@ class ServerHandler(Handler):
         self.__set_pub_key_to_connection(connection)
         self.__set_encrypt_marker_to_connection(connection)
         neighbour_connection = self.net_pool.find_neighbour(connection)
-        print('>'*10, 'hpn_neighbour_client', connection, connection.get_pub_key())
         if neighbour_connection:
-            print('>'*10, 'hpn_neighbour_client', neighbour_connection, neighbour_connection.get_pub_key())
             logger.info('found neighbour {} for peer {}'.format(neighbour_connection, connection))
             self.__send_hpn_neighbour_client_response(connection, neighbour_connection)
             self.__handle_disconnect(neighbour_connection, connection)
