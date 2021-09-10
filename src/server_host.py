@@ -8,25 +8,16 @@ __version__ = [0, 0]
 
 
 import asyncio
-import settings
 from settings import logger
 from host import Host
 from server_handler import ServerHandler
 from protocol import PROTOCOL
-
-
-class Server(Host):
-    async def run(self):
-        #logger.info('')
-        self.listener = await self.create_listener(
-            (settings.local_host,
-             settings.default_port))
-        await self.ping()
+from server_net_pool import ServerNetPool
 
 
 if __name__ == '__main__':
     logger.info('server start')
-    server = Server(handler=ServerHandler, protocol=PROTOCOL)
+    server = Host(net_pool=ServerNetPool, handler=ServerHandler, protocol=PROTOCOL)
     try:
         asyncio.run(server.run())
     except KeyboardInterrupt:

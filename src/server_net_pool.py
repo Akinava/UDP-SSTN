@@ -8,45 +8,18 @@ __version__ = [0, 0]
 
 import itertools
 import settings
-from utilit import Singleton
+from net_pool import NetPool
 from settings import logger
 
 
-class NetPool(Singleton):
-    def __init__(self):
-        self.__groups = []
-        self.__init_groups()
-
-    def __init_groups(self):
-        for _ in range(settings.peer_groups):
-            self.__groups.append([])
-
-    def __clean_groups(self):
-        for group_index in range(len(self.__groups)):
-            alive_group_tmp = []
-            for connection in self.__groups[group_index]:
-                if connection.last_received_message_is_over_time_out():
-                    logger.debug('host {} disconnected by timeout'.format(connection))
-                    continue
-                alive_group_tmp.append(connection)
-            self.__groups[group_index] = alive_group_tmp
-
-    def __join_groups(self):
-        return list(itertools.chain.from_iterable(self.__groups))
-
-    def __get_connection_group(self, connection):
-        for group in self.__groups:
-            if connection in group:
-                return group
-        return None
-
+class ServerNetPool(NetPool):
     def __get_waiting_connection_from_group(self, group):
         for connection in group:
             if connection.state == 'waiting':
                 return connection
 
     def find_neighbour(self, connection):
-        self.__clean_groups()
+        self.clean_connections_list()
         for group in self.__groups:
             if self.__peer_has_connection_to_group(group, connection):
                 continue
@@ -91,16 +64,9 @@ class NetPool(Singleton):
         self.__copy_connection_property(new_connection, old_connection)
         group[connection_index] = new_connection
 
-    def __copy_connection_property(self, new_connection, old_connection):
-        new_connection.set_pub_key(old_connection.get_pub_key())
-        new_connection.set_encrypt_marker(old_connection.get_encrypt_marker())
-        new_connection.groups = old_connection.groups
-        new_connection.set_time_sent_message(old_connection.get_time_sent_message())
-
-    def get_all_connections(self):
-        self.__clean_groups()
-        group_all = self.__join_groups()
-        return group_all
+    def __copy_connection_property(self, src_connection, dst_connection):
+        dst_connection.set_pub_key(src_connection.get_pub_key())
+        dst_connection.set_encrypt_marker(src_connection.get_encrypt_marker())
 
     def update_neighbour_group(self, connection0, connection1):
         if connection0 is None or connection1 is None:
