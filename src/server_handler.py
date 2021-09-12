@@ -12,18 +12,17 @@ from settings import logger
 
 
 class ServerHandler(Handler):
-    def hpn_neighbour_client(self, connection):
+    def hpn_neighbour_client(self, request):
         #logger.info('')
-        self.__set_pub_key_to_connection(connection)
-        self.__set_encrypt_marker_to_connection(connection)
-        neighbour_connection = self.net_pool.find_neighbour(connection)
+        self.__set_pub_key_to_connection(request)
+        self.__set_encrypt_marker_to_connection(request)
+        neighbour_connection = self.net_pool.find_neighbour(request.connection)
         if neighbour_connection:
-            logger.info('found neighbour {} for peer {}'.format(neighbour_connection, connection))
-            self.__send_hpn_neighbour_client_response(connection, neighbour_connection)
-            self.__handle_disconnect(neighbour_connection, connection)
+            logger.info('found neighbour {} for peer {}'.format(neighbour_connection, request.connection))
+            self.__send_hpn_neighbour_client_response(request.connection, neighbour_connection)
+            self.__handle_disconnect(neighbour_connection, request.connection)
         else:
-            logger.info('no neighbours for peer {}'.format(connection))
-        self.__update_connections_state(connection, neighbour_connection)
+            logger.info('no neighbours for peer {}'.format(request.connection))
 
     def __send_hpn_neighbour_client_response(self, connection1, connection2):
         connection1_message = self.__make_connection_message(connection1, connection2)
@@ -52,17 +51,13 @@ class ServerHandler(Handler):
         disconnect_flag = self.net_pool.can_be_disconnected(kwargs['receiving_connection'])
         return self.parser().pack_bool(disconnect_flag)
 
-    def __set_pub_key_to_connection(self, connection):
-        connection_pub_key = connection.get_unpack_request_part('requester_pub_key')
-        connection.set_pub_key(connection_pub_key)
+    def __set_pub_key_to_connection(self, request):
+        connection_pub_key = request.unpack_message.requester_pub_key
+        request.connection.set_pub_key(connection_pub_key)
 
-    def __set_encrypt_marker_to_connection(self, connection):
-        encrypt_marker = connection.get_unpack_request_part('encrypted_request_marker')
-        connection.set_encrypt_marker(encrypt_marker)
-
-    def __update_connections_state(self, connection, neighbour_connection):
-        stat = 'waiting' if neighbour_connection is None else 'in_progress'
-        self.__save_neighbour_connection_param(stat, connection, neighbour_connection)
+    def __set_encrypt_marker_to_connection(self, request):
+        encrypt_marker = request.unpack_message.encrypted_request_marker
+        request.connection.set_encrypt_marker(encrypt_marker)
 
     def __handle_disconnect(self, *connections):
         for connection in connections:
