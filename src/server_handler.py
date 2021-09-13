@@ -5,9 +5,10 @@ __copyright__ = 'Copyright © 2019'
 __license__ = 'MIT License'
 __version__ = [0, 0]
 
-from time import time
+
 from handler import Handler
 import settings
+from datagram import Datagram
 from settings import logger
 
 
@@ -19,27 +20,18 @@ class ServerHandler(Handler):
         neighbour_connection = self.net_pool.find_neighbour(request.connection)
         if neighbour_connection:
             logger.info('found neighbour {} for peer {}'.format(neighbour_connection, request.connection))
-            self.__send_hpn_neighbour_client_response(request.connection, neighbour_connection)
-            self.__handle_disconnect(neighbour_connection, request.connection)
+            self.__send_hpn_neighbour_client_response(request, request.connection, neighbour_connection)
+            self.__send_hpn_neighbour_client_response(request, neighbour_connection, request.connection)
+            self.__handle_disconnect(request.connection)
+            self.__handle_disconnect(neighbour_connection)
         else:
             logger.info('no neighbours for peer {}'.format(request.connection))
 
-    def __send_hpn_neighbour_client_response(self, connection1, connection2):
-        connection1_message = self.__make_connection_message(connection1, connection2)
-        connection2_message = self.__make_connection_message(connection2, connection1)
-
-        self.send(message=connection1_message,
-                  receiving_connection=connection1,
-                  package_protocol_name='hpn_neighbour_client')
-        self.send(message=connection2_message,
-                  receiving_connection=connection2,
-                  package_protocol_name='hpn_neighbour_client')
-
-    def __make_connection_message(self, receiving_connection, neighbour_connection):
-        return self.make_message(
-            package_protocol_name='hpn_neighbour_client',
-            receiving_connection=receiving_connection,
-            neighbour_connection=neighbour_connection)
+    def __send_hpn_neighbour_client_response(self, request, receiving_connection, neighbour_connection):
+        response = Datagram(receiving_connection)
+        self.send(request=request,
+                  response=response,
+                  neighbour_connection=neighbour_connection)
 
     def get_neighbour_pub_key(self, **kwargs):
         return kwargs['neighbour_connection'].get_pub_key()
@@ -48,7 +40,7 @@ class ServerHandler(Handler):
         return self.parser().pack_addr(kwargs['neighbour_connection'].get_remote_addr())
 
     def get_disconnect_flag(self, **kwargs):
-        disconnect_flag = self.net_pool.can_be_disconnected(kwargs['receiving_connection'])
+        disconnect_flag = self.net_pool.can_be_disconnected(kwargs['neighbour_connection'])
         return self.parser().pack_bool(disconnect_flag)
 
     def __set_pub_key_to_connection(self, request):
