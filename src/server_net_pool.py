@@ -18,13 +18,10 @@ class ServerNetPool(NetPool):
         for neighbour_connection in self.connections_list:
             if neighbour_connection is connection:
                 continue
-            if neighbour_connection.state != 'waiting':
-                continue
             if connection in neighbour_connection.peer_connections:
                 continue
             self.update_peer_pool_attributes(connection, neighbour_connection)
             return neighbour_connection
-        connection.state = 'waiting'
         return None
 
     def init_peer_pool_attributes(self, connection):
@@ -34,8 +31,6 @@ class ServerNetPool(NetPool):
     def update_peer_pool_attributes(self, connection1, connection2):
         connection1.peer_connections.append(connection2)
         connection2.peer_connections.append(connection1)
-        connection1.state = 'in_progress'
-        connection2.state = 'in_progress'
 
     def can_be_disconnected(self, connection):
         return len(connection.peer_connections) >= settings.peer_connections
