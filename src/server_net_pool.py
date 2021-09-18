@@ -12,7 +12,7 @@ from settings import logger
 
 
 class ServerNetPool(NetPool):
-    def find_neighbour(self, connection):
+    def find_neighbours(self, connection):
         self.clean_connections_list()
         self.init_peer_pool_attributes(connection)
         for neighbour_connection in self.connections_list:
@@ -21,8 +21,9 @@ class ServerNetPool(NetPool):
             if connection in neighbour_connection.peer_connections:
                 continue
             self.update_peer_pool_attributes(connection, neighbour_connection)
-            return neighbour_connection
-        return None
+            if self.has_enough_connections(connection):
+                return
+        return
 
     def init_peer_pool_attributes(self, connection):
         if not hasattr(connection, 'peer_connections'):
@@ -32,5 +33,24 @@ class ServerNetPool(NetPool):
         connection1.peer_connections.append(connection2)
         connection2.peer_connections.append(connection1)
 
-    def can_be_disconnected(self, connection):
+    def has_enough_connections(self, connection):
         return len(connection.peer_connections) >= settings.peer_connections
+
+    def get_pending_connections(self):
+        pending_connections = []
+        for connection in self.connections_list:
+            if not self.has_enough_connections(connection):
+                pending_connections.append(connection)
+        return pending_connections
+
+    def get_tail_connections(self):
+        return self.connections_list[-settings.peer_connections: ]
+
+    def can_be_disconnected(self, connection):
+        if not self.has_enough_connections(connection):
+            return False
+        if connection in self.get_pending_connections():
+            return False
+        if connection in self.get_tail_connections():
+            return False
+        return True
