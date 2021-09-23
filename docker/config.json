@@ -1,6 +1,6 @@
 {
-  "peer_timeout_seconds": 300,
-  "peer_ping_time_seconds": 150,
+  "peer_timeout_seconds": 15,
+  "peer_ping_time_seconds": 5,
   "peer_connections": 2,
   "shadow_file": "shadow",
   "default_port": 2003,

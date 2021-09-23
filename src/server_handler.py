@@ -14,7 +14,6 @@ from settings import logger
 class ServerHandler(Handler):
     def hpn_neighbours(self, request):
         #logger.info('')
-        self.net_pool.add_connection(request.connection)
         self.__set_pub_key_to_connection(request)
         self.__set_encrypt_marker_to_connection(request)
         self.net_pool.find_neighbours(request.connection)
@@ -24,6 +23,7 @@ class ServerHandler(Handler):
             self.__processing_neighbors(request)
         else:
             logger.info('no neighbours for peer {}'.format(request.connection))
+            self.hpn_ping(request.connection)
 
     def __processing_neighbors(self, request):
         self.__send_neighbours_response(request, request.connection, request.connection.peer_connections)
