@@ -8,7 +8,6 @@ __version__ = [0, 0]
 
 import settings
 from net_pool import NetPool
-from settings import logger
 
 
 class ServerNetPool(NetPool):
