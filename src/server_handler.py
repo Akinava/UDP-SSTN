@@ -45,7 +45,7 @@ class ServerHandler(Handler):
         return hpn_clients_list
 
     def pack_neighbour_connection(self, neighbour_connection):
-        client_data_structure = self.parser().protocol.lists.hpn_clients_list.structure
+        client_data_structure = self.parser().protocol['list']['hpn_clients_list']['structure']
         return self.make_message_by_structure(
             structure=client_data_structure,
             client_data=neighbour_connection)
@@ -60,11 +60,11 @@ class ServerHandler(Handler):
         return self.net_pool.can_be_disconnected(kwargs['response'].connection)
 
     def __set_pub_key_to_connection(self, request):
-        connection_pub_key = request.unpack_message.requester_pub_key
+        connection_pub_key = request.unpack_message['requester_pub_key']
         request.connection.set_pub_key(connection_pub_key)
 
     def __set_encrypt_marker_to_connection(self, request):
-        encrypt_marker = request.unpack_message.encrypted_request_marker
+        encrypt_marker = request.unpack_message['encrypted_request_marker']
         request.connection.set_encrypt_marker(encrypt_marker)
 
     def __handle_disconnect(self, connection):
